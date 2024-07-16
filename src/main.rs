@@ -1,8 +1,16 @@
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
+use maud::html;
 
 #[get("/")]
 async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello, world!")
+    let data = "Test Data";
+    let markup = html! {
+        p { "Data: " (data) "!" }
+    };
+
+    let html = markup.into_string();
+
+    HttpResponse::Ok().body(html)
 }
 
 #[actix_web::main]
