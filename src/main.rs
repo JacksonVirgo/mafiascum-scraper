@@ -7,7 +7,6 @@ async fn hello() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Get PORT from env or default to 3000
     let port = std::env::var("PORT")
         .unwrap_or("3000".to_string())
         .parse::<u16>()
