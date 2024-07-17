@@ -10,6 +10,7 @@ pub fn generate_header(options: Header) -> Markup {
         meta charset="utf-8";
         meta name="viewport" content="width=device-width, initial-scale=1";
         link rel="stylesheet" href="/static/all.css";
+        script src="/static/htmx.js" defer
         title { (options.title) }
     };
 
