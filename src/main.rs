@@ -16,7 +16,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(|| {
         App::new()
-            .service(fs::Files::new("/static", "./src/static"))
+            .service(fs::Files::new("/static", "./src/static").show_files_listing())
             .service(routes::main::main)
             .default_service(web::route().to(routes::not_found::not_found))
     })
