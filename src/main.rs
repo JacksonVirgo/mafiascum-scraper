@@ -1,23 +1,7 @@
-use actix_web::{get, App, HttpResponse, HttpServer, Responder};
-use maud::html;
+use actix_web::{App, HttpServer};
 
+mod routes;
 mod templates;
-use templates::header::{generate_header, Header};
-
-#[get("/")]
-async fn hello() -> impl Responder {
-    let header = generate_header(Header { title: "Test" });
-
-    let data = "Test Data";
-    let markup = html! {
-        (header)
-        p { "Data: " (data) "!" }
-    };
-
-    let html = markup.into_string();
-
-    HttpResponse::Ok().body(html)
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -29,7 +13,7 @@ async fn main() -> std::io::Result<()> {
     let address = format!("127.0.0.1:{}", port);
     println!("Listening on {}", address);
 
-    HttpServer::new(|| App::new().service(hello))
+    HttpServer::new(|| App::new().service(routes::main::main))
         .bind(&address)?
         .run()
         .await
