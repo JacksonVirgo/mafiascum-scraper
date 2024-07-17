@@ -1,0 +1,21 @@
+name: Rust Formatter
+
+on: [push, pull_request]
+
+jobs:
+    format:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Install rustfmt
+              run: rustup component add rustfmt
+
+            - name: Check formatting
+              run: |
+                  cargo fmt -- --check
+                  if [ $? -ne 0 ]; then
+                    echo "Code formatting issues found. Please run 'cargo fmt' locally to fix them."
+                    exit 1
+                  fi

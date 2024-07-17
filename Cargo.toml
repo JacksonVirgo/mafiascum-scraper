@@ -6,3 +6,6 @@ edition = "2021"
 [dependencies]
 actix-web = "4.8.0"
 maud = "0.26.0"
+
+[dev-dependencies]
+rustfmt = "0.10.0"
