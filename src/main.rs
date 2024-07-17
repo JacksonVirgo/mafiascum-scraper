@@ -18,7 +18,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(fs::Files::new("/static", "./src/static"))
             .service(routes::main::main)
-            .default_service(web::route().to(routes::notfound::not_found))
+            .default_service(web::route().to(routes::not_found::not_found))
     })
     .bind(&address)?
     .run()

@@ -1,2 +1,2 @@
 pub mod main;
-pub mod notfound;
+pub mod not_found;
