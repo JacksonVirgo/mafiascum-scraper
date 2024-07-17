@@ -9,7 +9,7 @@ pub fn generate_header(options: Header) -> Markup {
         (DOCTYPE)
         meta charset="utf-8";
         meta name="viewport" content="width=device-width, initial-scale=1";
-        link href="/static/output.css" rel="stylesheet" type="text/css";
+        link href="/style.css" rel="stylesheet" type="text/css";
         title { (options.title) };
     };
 

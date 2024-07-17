@@ -4,10 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-actix-files = "0.6.6"
 actix-web = "4.8.0"
 maud = "0.26.0"
-twust = "1.0.4"
+mime = "0.3.17"
 
 [dev-dependencies]
 rustfmt = "0.10.0"
