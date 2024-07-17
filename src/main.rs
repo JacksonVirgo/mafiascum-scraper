@@ -1,5 +1,5 @@
 use actix_files as fs;
-use actix_web::{App, HttpServer};
+use actix_web::{web, App, HttpServer};
 
 mod routes;
 mod templates;
@@ -16,8 +16,9 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(|| {
         App::new()
-            .service(routes::main::main)
             .service(fs::Files::new("/static", "./src/static"))
+            .service(routes::main::main)
+            .default_service(web::route().to(routes::notfound::not_found))
     })
     .bind(&address)?
     .run()
