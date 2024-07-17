@@ -11,7 +11,7 @@ async fn main() -> std::io::Result<()> {
         .parse::<u16>()
         .expect("env.PORT must be an integer");
 
-    let address = format!("127.0.0.1:{}", port);
+    let address = format!("0.0.0.0:{}", port);
     println!("Listening on {}", address);
 
     HttpServer::new(|| {
