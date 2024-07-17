@@ -10,7 +10,9 @@ async fn main() -> impl Responder {
     let data = "Test Data";
     let markup = html! {
         (header)
-        p { "Data: " (data) "!" }
+        body."bg-gray-900" {
+            p."text-lg text-red-300" { "Data: " (data) "!" }
+        }
     };
 
     let html = markup.into_string();
