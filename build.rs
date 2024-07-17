@@ -1,6 +1,13 @@
 use std::process::Command;
 
 fn main() {
+    Command::new("npm")
+        .arg("install")
+        .arg("-g")
+        .arg("tailwindcss")
+        .output()
+        .expect("TailwindCSS installed");
+
     let output = Command::new("npx")
         .arg("tailwindcss")
         .arg("-i")
