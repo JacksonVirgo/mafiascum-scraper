@@ -1,10 +1,18 @@
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use maud::html;
 
+mod templates;
+use templates::header::{Header, generate_header};
+
 #[get("/")]
 async fn hello() -> impl Responder {
+    let header = generate_header(Header {
+        title: "Test"
+    });
+
     let data = "Test Data";
     let markup = html! {
+        (header)
         p { "Data: " (data) "!" }
     };
 
