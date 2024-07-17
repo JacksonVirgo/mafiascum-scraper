@@ -1,7 +1,7 @@
 use maud::{html, Markup, DOCTYPE};
 
 pub struct Header<'a> {
-    pub title: &'a str
+    pub title: &'a str,
 }
 
 pub fn generate_header(options: Header) -> Markup {
