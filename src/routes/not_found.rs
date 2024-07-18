@@ -1,7 +1,7 @@
 use actix_web::HttpResponse;
 use maud::html;
 
-use crate::templates::header::{generate_header, Header};
+use crate::components::header::{generate_header, Header};
 
 pub async fn not_found() -> HttpResponse {
     let header = generate_header(Header { title: "Test" });

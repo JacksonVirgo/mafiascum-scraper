@@ -1,7 +1,7 @@
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use mime;
+mod components;
 mod routes;
-mod templates;
 
 const STYLE_CSS: &[u8] = include_bytes!("./static/output.css");
 #[get("/style.css")]
@@ -25,6 +25,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(serve_css)
             .service(routes::main::main)
+            .service(routes::main::test)
             .default_service(web::route().to(routes::not_found::not_found))
     })
     .bind(&address)?
