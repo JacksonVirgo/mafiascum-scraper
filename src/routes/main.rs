@@ -1,10 +1,9 @@
-use actix_web::{get, HttpResponse, Responder};
-use maud::html;
-
 use crate::components::{
     buttons::{gen_button, ButtonType, ExternalCTAButton},
     header::{generate_header, Header},
 };
+use actix_web::{get, HttpResponse, Responder};
+use maud::html;
 
 #[get("/")]
 async fn main() -> impl Responder {
