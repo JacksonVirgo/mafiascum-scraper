@@ -41,6 +41,7 @@ async fn main() -> std::io::Result<()> {
             .service(serve_css)
             .service(routes::main::main)
             .service(routes::test::test)
+            .service(routes::test::test_id)
             .default_service(web::route().to(routes::not_found::not_found))
     })
     .bind(&address)?
