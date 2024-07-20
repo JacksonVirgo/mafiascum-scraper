@@ -1,9 +1,10 @@
-use actix_web::{get, web, web::Data, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, web::Data, App, HttpResponse, HttpServer, Responder};
 use dotenv::dotenv;
 use mime;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 mod components;
 mod routes;
+mod scraping;
 
 pub struct AppState {
     db: Pool<Postgres>,
@@ -39,10 +40,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(Data::new(AppState { db: pool.clone() }))
             .service(serve_css)
-            .service(routes::main::main)
-            .service(routes::test::test)
-            .service(routes::test::test_id)
-            .default_service(web::route().to(routes::not_found::not_found))
+            .configure(routes::init)
     })
     .bind(&address)?
     .run()

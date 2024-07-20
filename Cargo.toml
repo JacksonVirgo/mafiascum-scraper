@@ -12,6 +12,7 @@ serde = { version = "1.0.204", features = ["derive"] }
 sqlx = { version = "0.7.4", features = ["postgres", "macros", "runtime-async-std-native-tls", "time", "chrono"] }
 tokio = "1.38.1"
 chrono = { version = "0.4.23", features = ["serde"] }
+url = "2.5.2"
 
 [dev-dependencies]
 rustfmt = "0.10.0"

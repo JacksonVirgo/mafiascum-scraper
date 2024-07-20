@@ -1415,6 +1415,7 @@ dependencies = [
  "serde",
  "sqlx",
  "tokio",
+ "url",
 ]
 
 [[package]]
