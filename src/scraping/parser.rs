@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use url::Url;
 
 pub struct ThreadURL {
@@ -28,4 +29,27 @@ pub fn parse_url(url_str: &str) -> Option<URLType> {
         }
     }
     None
+}
+
+pub fn get_search_params(url: &str) -> HashMap<String, String> {
+    let mut params = HashMap::new();
+    let base_url = "http://example.com"; // For resolving relative URLs
+    let resolved_url = match Url::parse(url) {
+        Ok(parsed_url) => parsed_url,
+        Err(_) => match Url::parse(base_url) {
+            Ok(base) => match base.join(url) {
+                Ok(joined_url) => joined_url,
+                Err(_) => return params,
+            },
+            Err(_) => return params,
+        },
+    };
+
+    for (key, value) in resolved_url.query_pairs() {
+        params.insert(key.into_owned(), value.into_owned());
+    }
+
+    println!("{:?}", params);
+
+    params
 }
