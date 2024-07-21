@@ -49,7 +49,5 @@ pub fn get_search_params(url: &str) -> HashMap<String, String> {
         params.insert(key.into_owned(), value.into_owned());
     }
 
-    println!("{:?}", params);
-
     params
 }
