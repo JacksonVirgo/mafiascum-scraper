@@ -10,9 +10,9 @@ pub struct PageDetails {
     pub thread_id: Option<String>,
 }
 
-pub async fn get_page_details(url: &str) -> Option<PageDetails> {
+pub async fn get_page_details(url: String) -> Option<PageDetails> {
     let client = Client::new();
-    let response = match client.get(url).send().await {
+    let response = match client.get(&url).send().await {
         Ok(resp) => resp,
         Err(_) => return None,
     };
@@ -56,4 +56,60 @@ pub async fn get_page_details(url: &str) -> Option<PageDetails> {
         url: href.unwrap_or(String::from(url)),
         thread_id,
     })
+}
+
+#[derive(Debug)]
+pub struct ActivityPageDetails {
+    pub users: Vec<String>,
+}
+
+pub async fn get_activity_page_details(url: String) -> Option<ActivityPageDetails> {
+    let client = Client::new();
+    let response = match client.get(&url).send().await {
+        Ok(resp) => resp,
+        Err(_) => return None,
+    };
+
+    let body = match response.text().await {
+        Ok(text) => text,
+        Err(_) => return None,
+    };
+
+    let document = Html::parse_document(&body);
+
+    let user_list_selector = match Selector::parse("#page-body > form > table > tbody") {
+        Ok(selector) => selector,
+        Err(_) => return None,
+    };
+
+    let mut users: Vec<String> = Vec::new();
+    let list_element = document.select(&user_list_selector).next()?;
+
+    let row_selector = match Selector::parse("tr") {
+        Ok(selector) => selector,
+        Err(_) => return None,
+    };
+
+    let cell_selector = match Selector::parse("td") {
+        Ok(selector) => selector,
+        Err(_) => return None,
+    };
+
+    let username_selector = match Selector::parse("a > .iso-username") {
+        Ok(selector) => selector,
+        Err(_) => return None,
+    };
+
+    for row in list_element.select(&row_selector) {
+        let mut cells = row.select(&cell_selector);
+        if let (Some(_first_td), Some(second_td)) = (cells.next(), cells.next()) {
+            let mut username_element = second_td.select(&username_selector);
+            if let Some(username) = username_element.next() {
+                users.push(username.text().collect::<Vec<_>>().concat());
+                continue;
+            }
+        }
+    }
+
+    return Some(ActivityPageDetails { users });
 }
