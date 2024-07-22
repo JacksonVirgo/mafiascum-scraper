@@ -1,13 +1,13 @@
-use actix_web::{post, web, HttpResponse, Responder};
-use maud::{html, Markup};
-
+use crate::components::{
+    buttons::{gen_button, ButtonType, FormSubmitButton},
+    forms::input::{gen_input, InputType, SelectMenuInput, TextInput},
+};
 use crate::scraping::{
-    parser::{
-        get_search_params, get_url_from_type, parse_url, PageType, PostURL, ThreadURL, URLType,
-    },
-    scraper::get_activity_page_details,
+    parser::{get_search_params, get_url_from_type, PageType, PostURL, ThreadURL, URLType},
     scraper::get_page_details,
 };
+use actix_web::{post, web, HttpResponse, Responder};
+use maud::html;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -17,7 +17,7 @@ pub struct FormData {
 #[post("/scrape-activity-page")]
 async fn scrape_activity_page(form: web::Form<FormData>) -> impl Responder {
     let search_params = get_search_params(&form.url);
-    let url = match (search_params.get("t"), search_params.get("p")) {
+    let raw_url = match (search_params.get("t"), search_params.get("p")) {
         (Some(thread_id), _) => get_url_from_type(
             URLType::Thread(ThreadURL {
                 thread_id: thread_id.to_string(),
@@ -33,106 +33,64 @@ async fn scrape_activity_page(form: web::Form<FormData>) -> impl Responder {
         _ => None,
     };
 
-    match url {
+    let url = match raw_url {
         None => {
-            let markup = html! {
-                div."text-red-500" { "Invalid URL" }
-            };
-            let html = markup.into_string();
-            return HttpResponse::BadRequest().body(html);
-        }
-        Some(url) => {
-            let mut data: Vec<Markup> = Vec::new();
-            let span_closure = |data: String| {
+            return HttpResponse::BadRequest().body(
                 html! {
-                    span { (data) }
+                    div."text-red-500" { "Invalid URL" }
                 }
-            };
-
-            let page_data = get_page_details(url.clone()).await;
-            match page_data {
-                Some(page) => {
-                    data.push(span_closure(format!("Title: {}", page.title)));
-                    data.push(span_closure(format!("URL: {}", page.url)));
-                    if page.thread_id.is_some() {
-                        let thread_id = page.thread_id.unwrap_or("Error".to_string());
-                        data.push(span_closure(format!("Thread: {}", thread_id)));
-
-                        let url = get_url_from_type(
-                            URLType::Thread(ThreadURL {
-                                thread_id: thread_id.clone(),
-                            }),
-                            PageType::ActivityPage,
-                        );
-
-                        let user_list = match url {
-                            Some(url) => match get_activity_page_details(url).await {
-                                Some(thread) => {
-                                    html!({
-                                        ul."list-disc pl-5" {
-                                            @for user in thread.users {
-                                                li{ (user) }
-                                            }
-                                        }
-                                    })
-                                }
-                                None => {
-                                    html!({
-                                        div."text-red-500" { "Error fetching users" }
-                                    })
-                                }
-                            },
-                            None => {
-                                html!({
-                                    div."text-red-500" { "Error fetching activity page" }
-                                })
-                            }
-                        };
-
-                        data.push(user_list);
-                    } else {
-                        data.push(span_closure("Thread: None".to_string()));
-                    }
-                }
-                None => {}
-            };
-
-            if let Some(new_url) = parse_url(url.as_str()) {
-                let markup = match new_url {
-                    crate::scraping::parser::URLType::Thread(thread) => {
-                        html! {
-                            div {
-                                div."text-red-500" { (format!("Thread: {}", thread.thread_id)) }
-                                @for string in data {
-                                  (string)
-                                }
-
-                            };
-                        }
-                    }
-                    crate::scraping::parser::URLType::Post(post) => {
-                        html! {
-                            div {
-                                div."text-red-500" { (format!("Post: {}", post.post_id)) }
-                                @for string in data {
-                                    div."text-white" { (string) }
-                                }
-                            }
-                        }
-                    }
-                };
-
-                let html = markup.into_string();
-                return HttpResponse::Ok().body(html);
-            } else {
-                let markup = html! {
-                    div {
-                        (format!("Invalid URL: {}", url))
-                    }
-                };
-                let html = markup.into_string();
-                return HttpResponse::Ok().body(html);
-            }
+                .into_string(),
+            )
         }
-    }
+        Some(url) => url,
+    };
+
+    // Instead of Vec, store the values in particular variables to pre-hydrate the form
+    // The values include:
+    // - Thread ID
+    // - Thread Title
+    // - Thread Queue
+    // - Total Post Count (for final games)
+    //      - Search page on ppp=200&start=9999999999
+
+    let page_data = get_page_details(url.clone()).await;
+    let (title, url, thread_id) = if let Some(page) = page_data {
+        (
+            page.title.as_deref().unwrap_or("").to_owned(),
+            page.url.as_deref().unwrap_or("").to_owned(),
+            page.thread_id.as_deref().unwrap_or("").to_owned(),
+        )
+    } else {
+        (String::new(), String::new(), String::new())
+    };
+
+    HttpResponse::Ok().body(html! ({
+        form."text-center w-1/2 flex flex-col items-center justify-left gap-2" hx-post="/api/scrape-activity-page" hx-target="this" hx-indicator="#scrape-form-loading" hx-swap="outerHTML" {
+            (gen_input(InputType::SelectMenuInput(SelectMenuInput {
+                name: "game_queue".to_string(),
+                placeholder: "Select the game queue".to_string(),
+                options: vec![String::from("Open"), String::from("Newbie"), String::from("Normal"), String::from("Mini/Micro Theme"), String::from("Large Theme"), String::from("Other/Unknown")],
+                is_required: Some(true),
+                default_value: Some(String::from("Other/Unknown"))
+            })))
+
+            (gen_input(InputType::TextInput(TextInput {
+                name: "game_index".to_string(),
+                placeholder: "Game Index".to_string(),
+                is_required: Some(true),
+                default_value: None
+            })))
+
+           (gen_input(InputType::TextInput(TextInput {
+               name: "title".to_string(),
+               placeholder: "Enter the game title".to_string(),
+               is_required: Some(true),
+               default_value: Some(title)
+           })))
+
+            (gen_button(ButtonType::FormSubmit(FormSubmitButton {
+                text: "Submit".to_string(),
+            })))
+        }
+    }).into_string())
 }

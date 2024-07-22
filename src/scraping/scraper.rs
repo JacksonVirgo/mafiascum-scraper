@@ -1,12 +1,13 @@
 use reqwest::Client;
-use scraper::{Html, Selector};
+use select::document::Document;
+use select::predicate::{Class, Name, Predicate};
 
 use crate::scraping::parser::get_search_params;
 
 #[derive(Debug)]
 pub struct PageDetails {
-    pub title: String,
-    pub url: String,
+    pub title: Option<String>,
+    pub url: Option<String>,
     pub thread_id: Option<String>,
 }
 
@@ -22,40 +23,33 @@ pub async fn get_page_details(url: String) -> Option<PageDetails> {
         Err(_) => return None,
     };
 
-    let document = Html::parse_document(&body);
-    let title_selector = match Selector::parse("h2") {
-        Ok(selector) => selector,
-        Err(_) => return None,
+    let document = Document::from(body.as_str());
+
+    let header = document.find(Name("h2")).next();
+
+    let mut page_data = PageDetails {
+        title: None,
+        url: None,
+        thread_id: None,
     };
 
-    let a_selector = match Selector::parse("a") {
-        Ok(selector) => selector,
-        Err(_) => return None,
-    };
+    match header {
+        Some(node) => {
+            page_data.title = Some(node.text());
+            page_data.url = node
+                .find(Name("a"))
+                .next()
+                .and_then(|node| node.attr("href"))
+                .map(String::from);
 
-    let title_element = document.select(&title_selector).next()?;
-    let title = title_element.text().collect::<Vec<_>>().concat();
-    let href = title_element
-        .select(&a_selector)
-        .next()
-        .and_then(|a_element| a_element.value().attr("href").map(String::from));
-
-    let thread_id = match href.clone() {
-        Some(href) => {
-            let search_params = get_search_params(&href);
-            match search_params.get("t") {
-                Some(thread_id) => Some(thread_id.clone()),
-                None => None,
+            if let Some(url) = &page_data.url {
+                page_data.thread_id = get_search_params(&url).get("t").map(String::from);
             }
         }
-        None => None,
+        None => (),
     };
 
-    Some(PageDetails {
-        title,
-        url: href.unwrap_or(String::from(url)),
-        thread_id,
-    })
+    Some(page_data)
 }
 
 #[derive(Debug)]
@@ -75,41 +69,24 @@ pub async fn get_activity_page_details(url: String) -> Option<ActivityPageDetail
         Err(_) => return None,
     };
 
-    let document = Html::parse_document(&body);
+    let document = Document::from(body.as_str());
 
-    let user_list_selector = match Selector::parse("#page-body > form > table > tbody") {
-        Ok(selector) => selector,
-        Err(_) => return None,
-    };
+    let user_list_selector = Name("tbody");
+    let list_node = document.find(user_list_selector).next()?;
 
-    let mut users: Vec<String> = Vec::new();
-    let list_element = document.select(&user_list_selector).next()?;
+    let mut users = Vec::new();
 
-    let row_selector = match Selector::parse("tr") {
-        Ok(selector) => selector,
-        Err(_) => return None,
-    };
-
-    let cell_selector = match Selector::parse("td") {
-        Ok(selector) => selector,
-        Err(_) => return None,
-    };
-
-    let username_selector = match Selector::parse("a > .iso-username") {
-        Ok(selector) => selector,
-        Err(_) => return None,
-    };
-
-    for row in list_element.select(&row_selector) {
-        let mut cells = row.select(&cell_selector);
+    for row in list_node.find(Name("tr")) {
+        let mut cells = row.find(Name("td"));
         if let (Some(_first_td), Some(second_td)) = (cells.next(), cells.next()) {
-            let mut username_element = second_td.select(&username_selector);
-            if let Some(username) = username_element.next() {
-                users.push(username.text().collect::<Vec<_>>().concat());
-                continue;
+            if let Some(username_node) = second_td
+                .find(Name("a").descendant(Name("span").and(Class("iso-username"))))
+                .next()
+            {
+                users.push(username_node.text());
             }
         }
     }
 
-    return Some(ActivityPageDetails { users });
+    Some(ActivityPageDetails { users })
 }
