@@ -21,7 +21,6 @@ async fn player_data() -> impl Responder {
                         is_required: Some(true),
                         default_value: Some(String::from("Other/Unknown"))
                     })))
-        
                     (gen_button(ButtonType::FormSubmit(FormSubmitButton {
                         text: "Save".to_string(),
                     })))

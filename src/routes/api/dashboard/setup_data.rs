@@ -21,7 +21,6 @@ async fn setup_data() -> impl Responder {
                         is_required: Some(true),
                         default_value: Some(String::from("Other/Unknown"))
                     })))
-        
                     label."text-xl" for="game_index" { "Game Index" }
                     (gen_input(InputType::TextInput(TextInput {
                         name: "game_index".to_string(),
@@ -29,7 +28,6 @@ async fn setup_data() -> impl Responder {
                         is_required: Some(true),
                         default_value: None
                     })))
-        
                     label."text-xl" for="title" { "Title" }
                     (gen_input(InputType::TextInput(TextInput {
                         name: "title".to_string(),
@@ -37,7 +35,6 @@ async fn setup_data() -> impl Responder {
                         is_required: Some(true),
                         default_value: None
                     })))
-        
                     (gen_button(ButtonType::FormSubmit(FormSubmitButton {
                         text: "Save".to_string(),
                     })))
