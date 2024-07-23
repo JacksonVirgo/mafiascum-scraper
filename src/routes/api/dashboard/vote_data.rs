@@ -9,9 +9,9 @@ struct TableRow {
     name: String,
     alignment: String,
     role: String,
-    replacements: String
+    replacements: String,
 }
-fn format_table_row(row:TableRow) -> Markup {
+fn format_table_row(row: TableRow) -> Markup {
     html!({
         tr."even:bg-zinc-600" {
             td."px-4 py-2" { (row.name) }
@@ -21,7 +21,6 @@ fn format_table_row(row:TableRow) -> Markup {
         }
     })
 }
-
 
 #[get("/votes")]
 async fn vote_data() -> impl Responder {

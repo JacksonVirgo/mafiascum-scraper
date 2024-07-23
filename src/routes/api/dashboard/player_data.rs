@@ -5,7 +5,6 @@ use crate::components::{
 use actix_web::{get, HttpResponse, Responder};
 use maud::html;
 
-
 #[get("/players")]
 async fn player_data() -> impl Responder {
     HttpResponse::Ok().body(
