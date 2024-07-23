@@ -1,11 +1,18 @@
 use crate::components::header::{generate_header, Header};
-use actix_web::{get, HttpResponse, Responder};
+use actix_web::{get, web, HttpResponse, Responder};
 use maud::html;
 
 #[get("/dashboard")]
-async fn dashboard() -> impl Responder {
+async fn dashboard_no_context() -> impl Responder {
+    HttpResponse::Found()
+        .insert_header(("Location", "https://mafiascum.net/viewtopic.php?t=92678"))
+        .finish()
+}
+
+#[get("/dashboard/{thread_id}")]
+async fn dashboard(thread_id: web::Path<i32>) -> impl Responder {
     let header = generate_header(Header {
-        title: "Dashboard | MafiaScum Scraper",
+        title: format!("Dashboard - {}", thread_id).as_str(),
     });
 
     let markup = html! {

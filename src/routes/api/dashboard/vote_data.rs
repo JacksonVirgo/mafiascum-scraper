@@ -6,18 +6,20 @@ use actix_web::{get, HttpResponse, Responder};
 use maud::{html, Markup};
 
 struct TableRow {
-    name: String,
-    alignment: String,
-    role: String,
-    replacements: String,
+    author: String,
+    target: String,
+    corrected_target: String,
+    post_number: i32,
+    validity: bool
 }
 fn format_table_row(row: TableRow) -> Markup {
     html!({
         tr."even:bg-zinc-600" {
-            td."px-4 py-2" { (row.name) }
-            td."px-4 py-2 border-l border-gray-200" { (row.alignment) }
-            td."px-4 py-2 border-l border-gray-200" { (row.role) }
-            td."px-4 py-2 border-l border-gray-200" { (row.replacements) }
+            td."px-4 py-2" { (row.author) }
+            td."px-4 py-2 border-l border-gray-200" { (row.target) }
+            td."px-4 py-2 border-l border-gray-200" { (row.corrected_target) }
+            td."px-4 py-2 border-l border-gray-200" { (row.post_number) }
+            td."px-4 py-2 border-l border-gray-200" { (row.validity) }
         }
     })
 }
@@ -45,30 +47,28 @@ async fn vote_data() -> impl Responder {
                 table."min-w-full bg-zinc-700 text-white" {
                     thead {
                         tr {
-                            th."px-4 py-2 border-gray-200 bg-zinc-800" { "Player Name" }
-                            th."px-4 py-2 border-l border-gray-200 bg-zinc-800" { "Alignment" }
-                            th."px-4 py-2 border-l border-gray-200 bg-zinc-800" { "Role" }
-                            th."px-4 py-2 border-l border-gray-200 bg-zinc-800" { "Replacements" }
+                            th."px-4 py-2 border-gray-200 bg-zinc-800" { "Author" }
+                            th."px-4 py-2 border-l border-gray-200 bg-zinc-800" { "Target" }
+                            th."px-4 py-2 border-l border-gray-200 bg-zinc-800" { "Corrected Target" }
+                            th."px-4 py-2 border-l border-gray-200 bg-zinc-800" { "Post Num" }
+                            th."px-4 py-2 border-l border-gray-200 bg-zinc-800" { "Validity" }
+                            
                         }
                     }
                     tbody id="player-table-body" {
                         (format_table_row(TableRow {
-                            name: "Player 1".to_string(),
-                            alignment: "Town".to_string(),
-                            role: "Cop".to_string(),
-                            replacements: "None".to_string(),
+                            author: "Bob Smith".to_string(),
+                            target: "Jaen Doe".to_string(),
+                            corrected_target: "Jane Doe".to_string(),
+                            post_number: 1,
+                            validity: true
                         }))
                         (format_table_row(TableRow {
-                            name: "Player 2".to_string(),
-                            alignment: "Mafia".to_string(),
-                            role: "Goon".to_string(),
-                            replacements: "Player 4".to_string(),
-                        }))
-                        (format_table_row(TableRow {
-                            name: "Player 3".to_string(),
-                            alignment: "Town".to_string(),
-                            role: "Cop".to_string(),
-                            replacements: "None".to_string(),
+                            author: "Deadpool".to_string(),
+                            target: "Spiderman".to_string(),
+                            corrected_target: "Spider-Man".to_string(),
+                            post_number: 2,
+                            validity: false
                         }))
                     }
                 }

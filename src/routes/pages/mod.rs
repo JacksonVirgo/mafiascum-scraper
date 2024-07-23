@@ -6,4 +6,5 @@ pub fn init(cfg: &mut actix_web::web::ServiceConfig) {
     cfg.service(home::main);
     cfg.service(scraper::scraper);
     cfg.service(dashboard::dashboard);
+    cfg.service(dashboard::dashboard_no_context);
 }

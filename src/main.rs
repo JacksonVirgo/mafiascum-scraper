@@ -1,6 +1,6 @@
 use actix_web::{get, web::Data, App, HttpResponse, HttpServer, Responder};
 use dotenv::dotenv;
-use mime;
+use mime::{self, Mime};
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 mod components;
 mod models;
@@ -12,11 +12,19 @@ pub struct AppState {
 }
 
 const STYLE_CSS: &[u8] = include_bytes!("./static/output.css");
+const FAVICON: &[u8] = include_bytes!("./static/favicon.ico");
 #[get("/style.css")]
 async fn serve_css() -> impl Responder {
     HttpResponse::Ok()
         .content_type(mime::TEXT_CSS_UTF_8)
         .body(STYLE_CSS)
+}
+
+#[get("/favicon.ico")]
+async fn serve_favicon() -> impl Responder {
+    HttpResponse::Ok()
+        .content_type("image/x-icon")
+        .body(FAVICON)
 }
 
 #[actix_web::main]
@@ -41,6 +49,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(Data::new(AppState { db: pool.clone() }))
             .service(serve_css)
+            .service(serve_favicon)
             .configure(routes::init)
     })
     .bind(&address)?
