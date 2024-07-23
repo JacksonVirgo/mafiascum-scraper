@@ -1,6 +1,6 @@
 use reqwest::Client;
 use select::document::Document;
-use select::predicate::{Class, Name, Predicate};
+use select::predicate::Name;
 
 use crate::scraping::parser::get_search_params;
 
@@ -50,43 +50,4 @@ pub async fn get_page_details(url: String) -> Option<PageDetails> {
     };
 
     Some(page_data)
-}
-
-#[derive(Debug)]
-pub struct ActivityPageDetails {
-    pub users: Vec<String>,
-}
-
-pub async fn get_activity_page_details(url: String) -> Option<ActivityPageDetails> {
-    let client = Client::new();
-    let response = match client.get(&url).send().await {
-        Ok(resp) => resp,
-        Err(_) => return None,
-    };
-
-    let body = match response.text().await {
-        Ok(text) => text,
-        Err(_) => return None,
-    };
-
-    let document = Document::from(body.as_str());
-
-    let user_list_selector = Name("tbody");
-    let list_node = document.find(user_list_selector).next()?;
-
-    let mut users = Vec::new();
-
-    for row in list_node.find(Name("tr")) {
-        let mut cells = row.find(Name("td"));
-        if let (Some(_first_td), Some(second_td)) = (cells.next(), cells.next()) {
-            if let Some(username_node) = second_td
-                .find(Name("a").descendant(Name("span").and(Class("iso-username"))))
-                .next()
-            {
-                users.push(username_node.text());
-            }
-        }
-    }
-
-    Some(ActivityPageDetails { users })
 }

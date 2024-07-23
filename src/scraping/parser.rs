@@ -16,19 +16,11 @@ pub enum URLType {
 
 pub enum PageType {
     Thread,
-    ActivityPage,
 }
 
 pub fn get_url_from_type(url_type: URLType, page_type: PageType) -> Option<String> {
     let base_url = "https://forum.mafiascum.net";
     match page_type {
-        PageType::ActivityPage => match url_type {
-            URLType::Thread(thread) => Some(format!(
-                "{}/app.php/activity_overview/{}",
-                base_url, thread.thread_id
-            )),
-            URLType::Post(_) => None,
-        },
         PageType::Thread => match url_type {
             URLType::Thread(thread) => {
                 Some(format!("{}/viewtopic.php?t={}", base_url, thread.thread_id))
@@ -36,23 +28,6 @@ pub fn get_url_from_type(url_type: URLType, page_type: PageType) -> Option<Strin
             URLType::Post(post) => Some(format!("{}/viewtopic.php?p={}", base_url, post.post_id)),
         },
     }
-}
-
-pub fn parse_url(url_str: &str) -> Option<URLType> {
-    if let Ok(parsed_url) = Url::parse(url_str) {
-        if let Some((_, id)) = parsed_url.query_pairs().find(|(key, _)| key == "t") {
-            return Some(URLType::Thread(ThreadURL {
-                thread_id: id.to_string(),
-            }));
-        }
-
-        if let Some((_, id)) = parsed_url.query_pairs().find(|(key, _)| key == "p") {
-            return Some(URLType::Post(PostURL {
-                post_id: id.to_string(),
-            }));
-        }
-    }
-    None
 }
 
 pub fn get_search_params(url: &str) -> HashMap<String, String> {

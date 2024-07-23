@@ -29,7 +29,7 @@ pub fn gen_input(raw_input: InputType) -> Markup {
         }
         InputType::SelectMenuInput(input) => {
             html! {
-                select."w-full px-4 py-2 border border-gray-300 rounded text-white bg-zinc-700" name=(input.name) id=(input.name) placeholder=(input.placeholder) {
+                select."w-full px-4 py-2 border border-gray-300 rounded text-white bg-zinc-700" name=(input.name) id=(input.name) placeholder=(input.placeholder) required=(input.is_required.unwrap_or(false)) {
                     @for option in &input.options {
                         option value=(option.clone()) selected=(Some(option.clone()) == input.default_value.clone()) {
                             (option)

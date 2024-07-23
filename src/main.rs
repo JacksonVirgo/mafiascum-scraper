@@ -3,6 +3,7 @@ use dotenv::dotenv;
 use mime;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 mod components;
+mod models;
 mod routes;
 mod scraping;
 
