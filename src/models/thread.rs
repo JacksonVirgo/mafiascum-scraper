@@ -1,4 +1,4 @@
-use crate::{scraping::scraper::PageData, AppState};
+use crate::AppState;
 use actix_web::web::Data;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};

@@ -63,11 +63,6 @@ impl NumberInputBuilder {
         self
     }
 
-    pub fn default_value(mut self, default_value: i32) -> Self {
-        self.default_value = Some(default_value);
-        self
-    }
-
     pub fn default_value_option(mut self, default_value: Option<i32>) -> Self {
         self.default_value = default_value;
         self
