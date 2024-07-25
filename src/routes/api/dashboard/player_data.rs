@@ -1,6 +1,6 @@
 use crate::components::{
     buttons::{gen_button, ButtonType, FormSubmitButton},
-    forms::input::{gen_input, InputType, SelectMenuInput},
+    forms::input::select_menu::SelectMenuBuilder,
 };
 use actix_web::{get, HttpResponse, Responder};
 use maud::{html, Markup};
@@ -24,6 +24,21 @@ fn format_table_row(row: TableRow) -> Markup {
 
 #[get("/players")]
 async fn player_data() -> impl Responder {
+    let game_queue = SelectMenuBuilder::new()
+        .name("game_queue")
+        .placeholder("Select the game queue")
+        .options(vec![
+            "Open",
+            "Newbie",
+            "Normal",
+            "Mini/Micro Theme",
+            "Large Theme",
+            "Other/Unknown",
+        ])
+        .is_required(true)
+        .default_value("Other/Unknown")
+        .build_html();
+
     HttpResponse::Ok().body(
         html! {
             div."w-full h-full flex flex-col p-4" {
@@ -31,13 +46,7 @@ async fn player_data() -> impl Responder {
                 div."text-xl text-white pb-2" { "Enter the data for the players in the game" }
                 form."flex flex-col gap-2" {
                     label."text-xl" for="game_queue" { "Placeholder" }
-                    (gen_input(InputType::SelectMenuInput(SelectMenuInput {
-                        name: "game_queue".to_string(),
-                        placeholder: "Select the game queue".to_string(),
-                        options: vec![String::from("Open"), String::from("Newbie"), String::from("Normal"), String::from("Mini/Micro Theme"), String::from("Large Theme"), String::from("Other/Unknown")],
-                        is_required: Some(true),
-                        default_value: Some(String::from("Other/Unknown"))
-                    })))
+                    (game_queue)
                     (gen_button(ButtonType::FormSubmit(FormSubmitButton {
                         text: "Save".to_string(),
                     })))
