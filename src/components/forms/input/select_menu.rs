@@ -86,4 +86,11 @@ impl SelectMenuBuilder {
         self.default_value = Some(default_value.to_string());
         self
     }
+
+    pub fn default_value_option(mut self, default_value: Option<String>) -> Self {
+        if let Some(default_value) = default_value {
+            self.default_value = Some(default_value.to_string());
+        }
+        self
+    }
 }

@@ -8,10 +8,16 @@ use sqlx::{self, FromRow};
 pub struct Thread {
     id: i32,
     thread_id: String,
-    title: Option<String>,
-    queue: Option<String>,
-    queue_index: Option<i32>,
+    pub title: Option<String>,
+    pub queue: Option<String>,
+    pub queue_index: Option<i32>,
     created_at: Option<NaiveDateTime>,
+}
+
+pub struct ThreadUpdate {
+    pub title: String,
+    pub queue: String,
+    pub queue_index: i32,
 }
 
 pub async fn get_thread(app_state: &Data<AppState>, thread_id: &str) -> Option<Thread> {
@@ -41,5 +47,33 @@ pub async fn create_thread(app_state: &Data<AppState>, thread_id: &str) -> Optio
     {
         Ok(thread) => Some(thread),
         _ => None,
+    }
+}
+
+pub async fn update_thread(
+    app_state: &Data<AppState>,
+    thread_id: &str,
+    data: ThreadUpdate,
+) -> Result<(), sqlx::Error> {
+    let db = &app_state.db;
+
+    match sqlx::query!(
+        "UPDATE threads SET title = $1, queue = $2, queue_index = $3 WHERE thread_id = $4",
+        data.title,
+        data.queue,
+        data.queue_index,
+        thread_id
+    )
+    .execute(db)
+    .await
+    {
+        Ok(_) => {
+            println!("Updated thread {}", thread_id);
+            Ok(())
+        }
+        Err(err) => {
+            println!("Failed to update thread {}: {}", thread_id, err);
+            Err(err)
+        }
     }
 }

@@ -39,18 +39,23 @@ async fn dashboard(raw_thread_id: web::Path<String>, state: web::Data<AppState>)
         title: format!("Dashboard - {}", thread_id).as_str(),
     });
 
+    let gen_url = |url: &str| {
+        let res = format!("/api/dashboard/{}/{}", url, thread_id);
+        println!("{}", res);
+        res
+    };
     let markup = html! {
         (header)
         body."bg-zinc-900 w-screen h-screen flex flex-row items-center justify-center text-white" {
             div."bg-zinc-800 border-r border-zinc-600 shrink h-full" {
                 ul."w-64 flex flex-col gap-2 p-4"{
-                    li."cursor-pointer" hx-get="/api/dashboard/setup" hx-target="#dashboard-content" hx-trigger="click, load" {
+                    li."cursor-pointer" hx-get=(gen_url("setup")) hx-target="#dashboard-content" hx-trigger="click, load" {
                         "Setup"
                     }
-                    li."cursor-pointer" hx-get="/api/dashboard/players" hx-target="#dashboard-content" {
+                    li."cursor-pointer" hx-get=(gen_url("players")) hx-target="#dashboard-content" {
                         "Players"
                     }
-                    li."cursor-pointer" hx-get="/api/dashboard/votes" hx-target="#dashboard-content" {
+                    li."cursor-pointer" hx-get=(gen_url("votes")) hx-target="#dashboard-content" {
                         "Votes"
                     }
                 }
