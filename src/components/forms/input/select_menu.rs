@@ -40,10 +40,22 @@ impl SelectMenuBuilder {
     pub fn build_html(self) -> Markup {
         let input = self.build();
         html! {
-            select."w-full px-4 py-2 border border-gray-300 rounded text-white bg-zinc-700" name=(input.name) id=(input.name) placeholder=(input.placeholder) required=(input.is_required.unwrap_or(false)) {
+            select."w-full px-4 py-2 border border-gray-300 rounded text-white bg-zinc-700" name=(input.name) id=(input.name) required=(input.is_required.unwrap_or(false)) {
+                option value="" disabled selected {
+                    (input.placeholder)
+                }
+
                 @for option in &input.options {
-                    option value=(option.clone()) selected=(Some(option.clone()) == input.default_value.clone()) {
-                        (option)
+                    @if let Some(default_value) = &input.default_value {
+                        @if option == default_value {
+                            option value=(option.clone()) selected {
+                                (option)
+                            }
+                        }
+                    } else {
+                        option value=(option.clone()) {
+                            (option)
+                        }
                     }
                 }
             }
