@@ -1,6 +1,6 @@
 use actix_web::{get, web::Data, App, HttpResponse, HttpServer, Responder};
 use dotenv::dotenv;
-use mime::{self, Mime};
+use mime;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 mod components;
 mod models;
