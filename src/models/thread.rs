@@ -14,7 +14,7 @@ pub struct Thread {
     created_at: Option<NaiveDateTime>,
 }
 
-pub async fn get_thread(app_state: Data<AppState>, thread_id: String) -> Option<Thread> {
+pub async fn get_thread(app_state: &Data<AppState>, thread_id: &str) -> Option<Thread> {
     let db = &app_state.db;
     match sqlx::query_as!(
         Thread,
@@ -29,17 +29,17 @@ pub async fn get_thread(app_state: Data<AppState>, thread_id: String) -> Option<
     }
 }
 
-// pub async fn create_thread(app_state: Data<AppState>, thread_id: String) -> Option<Thread> {
-//     let db = &app_state.db;
-//     match sqlx::query_as!(
-//         Thread,
-//         "INSERT INTO threads (thread_id) VALUES ($1) RETURNING *",
-//         thread_id
-//     )
-//     .fetch_one(db)
-//     .await
-//     {
-//         Ok(thread) => Some(thread),
-//         _ => None,
-//     }
-// }
+pub async fn create_thread(app_state: &Data<AppState>, thread_id: &str) -> Option<Thread> {
+    let db = &app_state.db;
+    match sqlx::query_as!(
+        Thread,
+        "INSERT INTO threads (thread_id) VALUES ($1) RETURNING *",
+        thread_id
+    )
+    .fetch_one(db)
+    .await
+    {
+        Ok(thread) => Some(thread),
+        _ => None,
+    }
+}

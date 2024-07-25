@@ -6,9 +6,9 @@ use crate::scraping::parser::get_search_params;
 
 #[derive(Debug)]
 pub struct PageDetails {
-    pub title: Option<String>,
-    pub url: Option<String>,
-    pub thread_id: Option<String>,
+    pub title: String,
+    pub url: String,
+    pub thread_id: String,
 }
 
 pub async fn get_page_details(url: String) -> Option<PageDetails> {
@@ -27,27 +27,32 @@ pub async fn get_page_details(url: String) -> Option<PageDetails> {
 
     let header = document.find(Name("h2")).next();
 
-    let mut page_data = PageDetails {
-        title: None,
-        url: None,
-        thread_id: None,
-    };
+    let mut title: Option<String> = None;
+    let mut url: Option<String> = None;
+    let mut thread_id: Option<String> = None;
 
     match header {
         Some(node) => {
-            page_data.title = Some(node.text());
-            page_data.url = node
+            title = Some(node.text());
+            url = node
                 .find(Name("a"))
                 .next()
                 .and_then(|node| node.attr("href"))
                 .map(String::from);
 
-            if let Some(url) = &page_data.url {
-                page_data.thread_id = get_search_params(&url).get("t").map(String::from);
+            if let Some(url) = &url {
+                thread_id = get_search_params(&url).get("t").map(String::from);
             }
         }
         None => (),
     };
 
-    Some(page_data)
+    match (title, url, thread_id) {
+        (Some(title), Some(url), Some(thread_id)) => Some(PageDetails {
+            title,
+            url,
+            thread_id,
+        }),
+        _ => None,
+    }
 }

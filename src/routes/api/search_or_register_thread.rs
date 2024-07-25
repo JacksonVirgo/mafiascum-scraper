@@ -1,17 +1,15 @@
+use crate::models::thread::{create_thread, get_thread};
 use crate::scraping::{
     parser::{get_search_params, get_url_from_type, PageType, PostURL, ThreadURL, URLType},
     scraper::get_page_details,
 };
+use crate::AppState;
 use actix_web::{
     post,
     web::{self, Data},
     HttpResponse, Responder,
 };
 use maud::html;
-
-use crate::models::thread::get_thread;
-
-use crate::AppState;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -52,17 +50,37 @@ async fn search_or_register_thread(
         Some(url) => url,
     };
 
-    let thread_id = match get_page_details(url.clone()).await {
-        Some(page) => page.thread_id,
-        None => None,
+    let page_data = match get_page_details(url.clone()).await {
+        Some(page) => page,
+        None => {
+            return HttpResponse::BadRequest().body(
+                html! {
+                    div."text-red-500" { "Invalid URL" }
+                }
+                .into_string(),
+            )
+        }
     };
 
-    if let Some(t) = thread_id {
-        let thread: Option<crate::models::thread::Thread> = get_thread(state, t.clone()).await;
-        println!("Found thread: {:?}", thread);
-    } else {
-        println!("No thread was found");
-    }
+    let thread_id = page_data.thread_id.clone();
+    let existing_thread = match get_thread(&state, thread_id.as_str()).await {
+        Some(thread) => Some(thread),
+        None => {
+            let thread = create_thread(&state, thread_id.as_str()).await;
+            match thread {
+                Some(thread) => Some(thread),
+                None => None,
+            }
+        }
+    };
 
-    HttpResponse::Ok().body(html! {}.into_string())
+    match existing_thread {
+        Some(_) => {
+            println!("Found existing thread: {}", thread_id);
+            return HttpResponse::Ok()
+                .insert_header(("HX-Redirect", format!("/dashboard/{}", thread_id)))
+                .finish();
+        }
+        None => return HttpResponse::NotFound().body("Failed to find or create thread"),
+    };
 }

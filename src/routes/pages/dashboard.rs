@@ -1,16 +1,40 @@
-use crate::components::header::{generate_header, Header};
+use crate::{
+    components::header::{generate_header, Header},
+    AppState,
+};
 use actix_web::{get, web, HttpResponse, Responder};
 use maud::html;
+
+use crate::models::thread::get_thread;
 
 #[get("/dashboard")]
 async fn dashboard_no_context() -> impl Responder {
     HttpResponse::Found()
-        .insert_header(("Location", "https://mafiascum.net/viewtopic.php?t=92678"))
+        .insert_header(("Location", "/"))
         .finish()
 }
 
 #[get("/dashboard/{thread_id}")]
-async fn dashboard(thread_id: web::Path<i32>) -> impl Responder {
+async fn dashboard(raw_thread_id: web::Path<String>, state: web::Data<AppState>) -> impl Responder {
+    let raw_thread_id = raw_thread_id.into_inner();
+    let thread_id = match raw_thread_id.parse::<String>() {
+        Ok(thread_id) => thread_id.clone(),
+        Err(_) => {
+            return HttpResponse::Found()
+                .insert_header(("Location", format!("/")))
+                .finish();
+        }
+    };
+
+    let _ = match get_thread(&state, &thread_id).await {
+        Some(thread) => Some(thread),
+        None => {
+            return HttpResponse::Found()
+                .append_header(("Location", format!("/")))
+                .finish();
+        }
+    };
+
     let header = generate_header(Header {
         title: format!("Dashboard - {}", thread_id).as_str(),
     });
