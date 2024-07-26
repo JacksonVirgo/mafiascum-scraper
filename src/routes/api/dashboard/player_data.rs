@@ -1,8 +1,16 @@
-use crate::components::{
-    buttons::{gen_button, ButtonType, FormSubmitButton},
-    forms::input::select_menu::SelectMenuBuilder,
+use crate::{
+    components::{
+        buttons::{gen_button, ButtonType, FormSubmitButton},
+        forms::input::select_menu::SelectMenuBuilder,
+    },
+    models::players::get_players,
+    AppState,
 };
-use actix_web::{get, HttpResponse, Responder};
+use actix_web::{
+    get,
+    web::{self, Data},
+    HttpResponse, Responder,
+};
 use maud::{html, Markup};
 
 struct TableRow {
@@ -22,8 +30,44 @@ fn format_table_row(row: TableRow) -> Markup {
     })
 }
 
-#[get("/players")]
-async fn player_data() -> impl Responder {
+#[get("/players/{thread_id}")]
+async fn player_data(state: Data<AppState>, raw_thread_id: web::Path<String>) -> impl Responder {
+    let raw_thread_id = raw_thread_id.into_inner();
+    let thread_id = match raw_thread_id.parse::<String>() {
+        Ok(id) => id,
+        Err(_) => {
+            return HttpResponse::Found()
+                .insert_header(("HX-Location", format!("/")))
+                .finish();
+        }
+    };
+
+    let players = match get_players(&state, &thread_id).await {
+        Some(thread) => thread,
+        None => {
+            return HttpResponse::Found()
+                .insert_header(("HX-Location", format!("/")))
+                .finish();
+        }
+    };
+
+    let player_rows: Vec<Markup> = players
+        .iter()
+        .map(|p| {
+            format_table_row(TableRow {
+                name: p.name.clone(),
+                alignment: match p.alignment.clone() {
+                    Some(a) => a.to_string(),
+                    None => "Not Set".to_string(),
+                },
+                role: p.role.clone().unwrap_or("None".to_string()),
+                replacements: p.role.clone().unwrap_or("None".to_string()),
+            })
+        })
+        .collect();
+
+    let player_row_count = player_rows.len();
+
     let game_queue = SelectMenuBuilder::new()
         .name("game_queue")
         .placeholder("Select the game queue")
@@ -51,7 +95,8 @@ async fn player_data() -> impl Responder {
                         text: "Save".to_string(),
                     })))
                 }
-                table."min-w-full bg-zinc-700 text-white" {
+                div."min-w-full" {
+                table."w-full bg-zinc-700 text-white" {
                     thead {
                         tr {
                             th."px-4 py-2 border-gray-200 bg-zinc-800" { "Player Name" }
@@ -61,26 +106,16 @@ async fn player_data() -> impl Responder {
                         }
                     }
                     tbody id="player-table-body" {
-                        (format_table_row(TableRow {
-                            name: "Player 1".to_string(),
-                            alignment: "Town".to_string(),
-                            role: "Cop".to_string(),
-                            replacements: "None".to_string(),
-                        }))
-                        (format_table_row(TableRow {
-                            name: "Player 2".to_string(),
-                            alignment: "Mafia".to_string(),
-                            role: "Goon".to_string(),
-                            replacements: "Player 4".to_string(),
-                        }))
-                        (format_table_row(TableRow {
-                            name: "Player 3".to_string(),
-                            alignment: "Town".to_string(),
-                            role: "Cop".to_string(),
-                            replacements: "None".to_string(),
-                        }))
+                        @for row in player_rows {
+                            (row)
+                        }
                     }
                 }
+                @if player_row_count == 0 {
+                    div."bg-zinc-700 w-full" {
+                        div."px-4 py-2 text-center w-full"{ "No players found" }
+                    }
+                }}
             }
         }
         .into_string(),
