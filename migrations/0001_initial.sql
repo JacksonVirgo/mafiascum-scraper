@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS players (
     name VARCHAR(32) NOT NULL,
     alignment alignment,
     role VARCHAR(128),
+    has_won BOOLEAN,
+    aliases TEXT[] NOT NULL DEFAULT '{}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     thread_id VARCHAR(32) NOT NULL,
     FOREIGN KEY (thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE
