@@ -77,8 +77,8 @@ impl SelectMenuBuilder {
         self
     }
 
-    pub fn options(mut self, options: Vec<&str>) -> Self {
-        self.options = options.iter().map(|s| s.to_string()).collect();
+    pub fn options(mut self, options: Vec<String>) -> Self {
+        self.options = options;
         self
     }
 

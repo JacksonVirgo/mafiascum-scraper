@@ -4,6 +4,7 @@ use crate::{
         forms::input::select_menu::SelectMenuBuilder,
     },
     models::players::get_players,
+    routes::api::dashboard::setup_data::GameQueue,
     AppState,
 };
 use actix_web::{
@@ -71,14 +72,7 @@ async fn player_data(state: Data<AppState>, raw_thread_id: web::Path<String>) ->
     let game_queue = SelectMenuBuilder::new()
         .name("game_queue")
         .placeholder("Select the game queue")
-        .options(vec![
-            "Open",
-            "Newbie",
-            "Normal",
-            "Mini/Micro Theme",
-            "Large Theme",
-            "Other/Unknown",
-        ])
+        .options(GameQueue::to_vec())
         .is_required(true)
         .default_value("Other/Unknown")
         .build_html();

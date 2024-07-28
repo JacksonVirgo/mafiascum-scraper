@@ -15,6 +15,30 @@ use actix_web::{
     HttpResponse, Responder,
 };
 use maud::html;
+use strum::IntoEnumIterator;
+use strum_macros::{Display, EnumIter};
+
+#[derive(EnumIter, Display, Debug)]
+pub enum GameQueue {
+    #[strum(serialize = "Open")]
+    Open,
+    #[strum(serialize = "Newbie")]
+    Newbie,
+    #[strum(serialize = "Normal")]
+    Normal,
+    #[strum(serialize = "Mini/Micro Theme")]
+    MiniOrMicroTheme,
+    #[strum(serialize = "Large Theme")]
+    LargeTheme,
+    #[strum(serialize = "Other/Unknown")]
+    OtherOrUnknown,
+}
+
+impl GameQueue {
+    pub fn to_vec() -> Vec<String> {
+        GameQueue::iter().map(|q| q.to_string()).collect()
+    }
+}
 
 #[derive(serde::Deserialize, Debug)]
 struct FormData {
@@ -53,14 +77,7 @@ async fn setup_data(state: Data<AppState>, raw_thread_id: web::Path<String>) -> 
     let game_queue = SelectMenuBuilder::new()
         .name("game_queue")
         .placeholder("Select the game queue")
-        .options(vec![
-            "Open",
-            "Newbie",
-            "Normal",
-            "Mini/Micro Theme",
-            "Large Theme",
-            "Other/Unknown",
-        ])
+        .options(GameQueue::to_vec())
         .is_required(true)
         .default_value_option(game_queue)
         .build_html();
