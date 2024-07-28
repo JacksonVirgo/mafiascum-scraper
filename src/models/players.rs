@@ -3,47 +3,24 @@ use actix_web::web::Data;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::{self, FromRow};
+use strum_macros::{Display, EnumString};
 
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type, EnumString, Display)]
 pub enum PlayerAlignment {
+    #[strum(serialize = "Town")]
     Town,
+    #[strum(serialize = "Mafia")]
     Mafia,
+    #[strum(serialize = "Werewolf")]
     Werewolf,
+    #[strum(serialize = "Cult")]
     Cult,
+    #[strum(serialize = "Self-Aligned (Killing)")]
     SelfAlignedKilling,
+    #[strum(serialize = "Self-Aligned (Other)")]
     SelfAlignedOther,
+    #[strum(serialize = "Unknown")]
     Unknown,
-}
-
-// Convert to String
-impl ToString for PlayerAlignment {
-    fn to_string(&self) -> String {
-        match self {
-            PlayerAlignment::Town => "Town",
-            PlayerAlignment::Mafia => "Mafia",
-            PlayerAlignment::Werewolf => "Werewolf",
-            PlayerAlignment::Cult => "Cult",
-            PlayerAlignment::SelfAlignedKilling => "Self-Aligned (Killing)",
-            PlayerAlignment::SelfAlignedOther => "Self-Aligned (Other)",
-            PlayerAlignment::Unknown => "Unknown",
-        }
-        .to_string()
-    }
-}
-
-// Convert from String
-impl From<String> for PlayerAlignment {
-    fn from(s: String) -> Self {
-        match s.as_str() {
-            "Town" => PlayerAlignment::Town,
-            "Mafia" => PlayerAlignment::Mafia,
-            "Werewolf" => PlayerAlignment::Werewolf,
-            "Cult" => PlayerAlignment::Cult,
-            "Self-Aligned (Killing)" => PlayerAlignment::SelfAlignedKilling,
-            "Self-Aligned (Other)" => PlayerAlignment::SelfAlignedOther,
-            _ => PlayerAlignment::Unknown,
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, FromRow, Debug)]
