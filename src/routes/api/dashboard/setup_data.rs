@@ -1,4 +1,4 @@
-use crate::models::thread::{get_thread, update_thread};
+use crate::models::thread::{get_thread, update_thread, GameQueue};
 use crate::{
     components::{
         buttons::{gen_button, ButtonType, FormSubmitButton},
@@ -15,30 +15,6 @@ use actix_web::{
     HttpResponse, Responder,
 };
 use maud::html;
-use strum::IntoEnumIterator;
-use strum_macros::{Display, EnumIter};
-
-#[derive(EnumIter, Display, Debug)]
-pub enum GameQueue {
-    #[strum(serialize = "Open")]
-    Open,
-    #[strum(serialize = "Newbie")]
-    Newbie,
-    #[strum(serialize = "Normal")]
-    Normal,
-    #[strum(serialize = "Mini/Micro Theme")]
-    MiniOrMicroTheme,
-    #[strum(serialize = "Large Theme")]
-    LargeTheme,
-    #[strum(serialize = "Other/Unknown")]
-    OtherOrUnknown,
-}
-
-impl GameQueue {
-    pub fn to_vec() -> Vec<String> {
-        GameQueue::iter().map(|q| q.to_string()).collect()
-    }
-}
 
 #[derive(serde::Deserialize, Debug)]
 struct FormData {

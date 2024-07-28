@@ -3,6 +3,30 @@ use actix_web::web::Data;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::{self, FromRow};
+use strum::IntoEnumIterator;
+use strum_macros::{Display, EnumIter};
+
+#[derive(EnumIter, Display, Debug)]
+pub enum GameQueue {
+    #[strum(serialize = "Open")]
+    Open,
+    #[strum(serialize = "Newbie")]
+    Newbie,
+    #[strum(serialize = "Normal")]
+    Normal,
+    #[strum(serialize = "Mini/Micro Theme")]
+    MiniOrMicroTheme,
+    #[strum(serialize = "Large Theme")]
+    LargeTheme,
+    #[strum(serialize = "Other/Unknown")]
+    OtherOrUnknown,
+}
+
+impl GameQueue {
+    pub fn to_vec() -> Vec<String> {
+        GameQueue::iter().map(|q| q.to_string()).collect()
+    }
+}
 
 #[derive(Serialize, Deserialize, FromRow, Debug)]
 pub struct Thread {

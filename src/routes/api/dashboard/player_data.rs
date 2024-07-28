@@ -3,8 +3,7 @@ use crate::{
         buttons::{gen_button, ButtonType, FormSubmitButton},
         forms::input::select_menu::SelectMenuBuilder,
     },
-    models::players::get_players,
-    routes::api::dashboard::setup_data::GameQueue,
+    models::{players::get_players, thread::GameQueue},
     AppState,
 };
 use actix_web::{
