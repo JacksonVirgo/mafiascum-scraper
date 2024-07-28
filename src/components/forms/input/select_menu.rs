@@ -39,6 +39,33 @@ impl SelectMenuBuilder {
 
     pub fn build_html(self) -> Markup {
         let input = self.build();
+        let default_value = input.default_value.clone();
+
+        let add_row = |option: String| match &default_value {
+            Some(default) => {
+                if &option == default {
+                    html! {
+                        option value=(option.clone()) selected {
+                            (option)
+                        }
+                    }
+                } else {
+                    html! {
+                        option value=(option.clone()) {
+                            (option)
+                        }
+                    }
+                }
+            }
+            None => {
+                html! {
+                    option value=(option.clone()) {
+                        (option)
+                    }
+                }
+            }
+        };
+
         html! {
             select."w-full px-4 py-2 border border-gray-300 rounded text-white bg-zinc-700" name=(input.name) id=(input.name) required=(input.is_required.unwrap_or(false)) {
                 option value="" disabled selected {
@@ -46,17 +73,7 @@ impl SelectMenuBuilder {
                 }
 
                 @for option in &input.options {
-                    @if let Some(default_value) = &input.default_value {
-                        @if option == default_value {
-                            option value=(option.clone()) selected {
-                                (option)
-                            }
-                        }
-                    } else {
-                        option value=(option.clone()) {
-                            (option)
-                        }
-                    }
+                    (add_row(option.clone()))
                 }
             }
         }
@@ -79,11 +96,6 @@ impl SelectMenuBuilder {
 
     pub fn options(mut self, options: Vec<String>) -> Self {
         self.options = options;
-        self
-    }
-
-    pub fn default_value(mut self, default_value: &str) -> Self {
-        self.default_value = Some(default_value.to_string());
         self
     }
 

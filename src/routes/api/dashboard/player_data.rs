@@ -3,7 +3,7 @@ use crate::{
         buttons::{gen_button, ButtonType, FormSubmitButton},
         forms::input::select_menu::SelectMenuBuilder,
     },
-    models::{players::get_players, thread::GameQueue},
+    models::players::{get_players, PlayerAlignment},
     AppState,
 };
 use actix_web::{
@@ -68,12 +68,18 @@ async fn player_data(state: Data<AppState>, raw_thread_id: web::Path<String>) ->
 
     let player_row_count = player_rows.len();
 
-    let game_queue = SelectMenuBuilder::new()
-        .name("game_queue")
-        .placeholder("Select the game queue")
-        .options(GameQueue::to_vec())
+    let alignments = PlayerAlignment::to_vec();
+    let default_alignment = match alignments.last() {
+        Some(alignment) => Some(alignment.to_string()),
+        None => None,
+    };
+
+    let alignment = SelectMenuBuilder::new()
+        .name("alignment")
+        .placeholder("Select the players alignment")
+        .options(PlayerAlignment::to_vec())
         .is_required(true)
-        .default_value("Other/Unknown")
+        .default_value_option(default_alignment)
         .build_html();
 
     HttpResponse::Ok().body(
@@ -83,7 +89,7 @@ async fn player_data(state: Data<AppState>, raw_thread_id: web::Path<String>) ->
                 div."text-xl text-white pb-2" { "Enter the data for the players in the game" }
                 form."flex flex-col gap-2" {
                     label."text-xl" for="game_queue" { "Placeholder" }
-                    (game_queue)
+                    (alignment)
                     (gen_button(ButtonType::FormSubmit(FormSubmitButton {
                         text: "Save".to_string(),
                     })))

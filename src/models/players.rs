@@ -3,9 +3,10 @@ use actix_web::web::Data;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::{self, FromRow};
-use strum_macros::{Display, EnumString};
+use strum::IntoEnumIterator;
+use strum_macros::{Display, EnumIter, EnumString};
 
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type, EnumString, Display)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type, EnumString, Display, EnumIter)]
 pub enum PlayerAlignment {
     #[strum(serialize = "Town")]
     Town,
@@ -21,6 +22,12 @@ pub enum PlayerAlignment {
     SelfAlignedOther,
     #[strum(serialize = "Unknown")]
     Unknown,
+}
+
+impl PlayerAlignment {
+    pub fn to_vec() -> Vec<String> {
+        PlayerAlignment::iter().map(|q| q.to_string()).collect()
+    }
 }
 
 #[derive(Serialize, Deserialize, FromRow, Debug)]
