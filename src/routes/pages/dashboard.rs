@@ -49,11 +49,7 @@ async fn dashboard(
         title: format!("Dashboard - {}", thread_id).as_str(),
     });
 
-    let gen_url = |url: &str| {
-        let res = format!("/api/dashboard/{}/{}", url, thread_id);
-        println!("{}", res);
-        res
-    };
+    let gen_url = |url: &str| format!("/api/dashboard/{}/{}", url, thread_id);
 
     let get_url_param = |param: &str| format!("/dashboard/{}?d={}", thread_id, param);
     let get_htmx_trigger = |trigger: &str| match query.d {
