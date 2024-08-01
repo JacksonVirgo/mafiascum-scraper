@@ -80,7 +80,6 @@ async fn player_data(state: Data<AppState>, raw_thread_id: web::Path<String>) ->
         .build_html();
 
     let form_post_uri = format!("/api/dashboard/players/{}", thread_id);
-    println!("{:?}", form_post_uri);
 
     HttpResponse::Ok().body(
         html! {
@@ -129,7 +128,6 @@ async fn add_player(
     state: Data<AppState>,
     form: web::Form<FormData>,
 ) -> impl Responder {
-    println!("Debug: {:?}", form);
     let raw_thread_id = raw_thread_id.into_inner();
     let thread_id = match raw_thread_id.parse::<String>() {
         Ok(id) => id,
@@ -142,7 +140,6 @@ async fn add_player(
 
     let form_data = form.into_inner();
     let player = create_player(&state, &thread_id, &form_data.username).await;
-    println!("{:?}", player);
 
     HttpResponse::Found()
         .insert_header(("Location", format!("/api/dashboard/players/{}", thread_id)))
