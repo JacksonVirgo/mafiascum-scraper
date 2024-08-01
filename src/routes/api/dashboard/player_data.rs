@@ -1,17 +1,22 @@
 use crate::{
     components::{
         buttons::{gen_button, ButtonType, FormSubmitButton},
-        forms::input::select_menu::SelectMenuBuilder,
+        forms::input::text_input::TextInputBuilder,
     },
-    models::players::{get_players, PlayerAlignment},
+    models::players::{create_player, get_players},
     AppState,
 };
 use actix_web::{
-    get,
+    get, post,
     web::{self, Data},
     HttpResponse, Responder,
 };
 use maud::{html, Markup};
+
+#[derive(serde::Deserialize, Debug)]
+struct FormData {
+    username: String,
+}
 
 struct TableRow {
     name: String,
@@ -68,30 +73,27 @@ async fn player_data(state: Data<AppState>, raw_thread_id: web::Path<String>) ->
 
     let player_row_count = player_rows.len();
 
-    let alignments = PlayerAlignment::to_vec();
-    let default_alignment = match alignments.last() {
-        Some(alignment) => Some(alignment.to_string()),
-        None => None,
-    };
-
-    let alignment = SelectMenuBuilder::new()
-        .name("alignment")
-        .placeholder("Select the players alignment")
-        .options(PlayerAlignment::to_vec())
+    let name_input = TextInputBuilder::new()
+        .name("username")
+        .placeholder("Enter the players name")
         .is_required(true)
-        .default_value_option(default_alignment)
         .build_html();
+
+    let form_post_uri = format!("/api/dashboard/players/{}", thread_id);
+    println!("{:?}", form_post_uri);
 
     HttpResponse::Ok().body(
         html! {
-            div."w-full h-full flex flex-col p-4" {
+            div."w-full h-full flex flex-col p-4" id="player-wrapper" {
                 h1."text-3xl text-white font-bold pb-2" { "Player Data" }
-                div."text-xl text-white pb-2" { "Enter the data for the players in the game" }
-                form."flex flex-col gap-2" {
-                    label."text-xl" for="game_queue" { "Placeholder" }
-                    (alignment)
+               div."text-xl text-white pb-2" { "Enter the data for the players in the game" }
+                form."flex flex-col gap-2" hx-post=(form_post_uri) hx-target="#player-wrapper" hx-swap="outerHTML" {
+                    label."text-xl" for="name" { "Username" }
+                    (name_input)
+                    div."text-sm text-gray-400 flex flex-row gap-2 pt-4" { span."text-red-500" {"*"} span {"Additional information can be added through the edit button after adding the player" }}
+
                     (gen_button(ButtonType::FormSubmit(FormSubmitButton {
-                        text: "Save".to_string(),
+                        text: "Add Player".to_string(),
                     })))
                 }
                 div."min-w-full" {
@@ -119,4 +121,30 @@ async fn player_data(state: Data<AppState>, raw_thread_id: web::Path<String>) ->
         }
         .into_string(),
     )
+}
+
+#[post("/players/{thread_id}")]
+async fn add_player(
+    raw_thread_id: web::Path<String>,
+    state: Data<AppState>,
+    form: web::Form<FormData>,
+) -> impl Responder {
+    println!("Debug: {:?}", form);
+    let raw_thread_id = raw_thread_id.into_inner();
+    let thread_id = match raw_thread_id.parse::<String>() {
+        Ok(id) => id,
+        Err(_) => {
+            return HttpResponse::Found()
+                .insert_header(("HX-Location", format!("/")))
+                .finish();
+        }
+    };
+
+    let form_data = form.into_inner();
+    let player = create_player(&state, &thread_id, &form_data.username).await;
+    println!("{:?}", player);
+
+    HttpResponse::Found()
+        .insert_header(("Location", format!("/api/dashboard/players/{}", thread_id)))
+        .finish()
 }

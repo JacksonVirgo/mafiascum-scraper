@@ -2,7 +2,7 @@ use crate::AppState;
 use actix_web::web::Data;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use sqlx::{self, FromRow};
+use sqlx::{self, postgres::PgQueryResult, FromRow};
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter, EnumString};
 
@@ -53,6 +53,25 @@ pub async fn get_players(app_state: &Data<AppState>, thread_id: &str) -> Option<
     .await
     {
         Ok(thread) => Some(thread),
+        _ => None,
+    }
+}
+
+pub async fn create_player(
+    app_state: &Data<AppState>,
+    thread_id: &str,
+    name: &str,
+) -> Option<PgQueryResult> {
+    let db = &app_state.db;
+    match sqlx::query!(
+        "INSERT INTO players (name, thread_id) VALUES ($1, $2)",
+        name,
+        thread_id
+    )
+    .execute(db)
+    .await
+    {
+        Ok(player) => Some(player),
         _ => None,
     }
 }
