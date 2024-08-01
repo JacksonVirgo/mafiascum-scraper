@@ -139,7 +139,7 @@ async fn add_player(
     };
 
     let form_data = form.into_inner();
-    let player = create_player(&state, &thread_id, &form_data.username).await;
+    let _ = create_player(&state, &thread_id, &form_data.username).await;
 
     HttpResponse::Found()
         .insert_header(("Location", format!("/api/dashboard/players/{}", thread_id)))
