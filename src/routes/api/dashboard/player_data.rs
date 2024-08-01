@@ -26,7 +26,7 @@ struct TableRow {
 }
 fn format_table_row(row: TableRow) -> Markup {
     html!({
-        tr."even:bg-zinc-600" {
+        tr."even:bg-zinc-600 hover:cursor-pointer hover:bg-zinc-500" {
             td."px-4 py-2" { (row.name) }
             td."px-4 py-2 border-l border-gray-200" { (row.alignment) }
             td."px-4 py-2 border-l border-gray-200" { (row.role) }
