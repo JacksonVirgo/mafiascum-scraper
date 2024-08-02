@@ -1,5 +1,5 @@
-use crate::components::buttons::{gen_button, ButtonType, FormSubmitButton};
-use actix_web::{get, HttpResponse, Responder};
+use crate::{components::buttons::{gen_button, ButtonType, FormSubmitButton}, AppState};
+use actix_web::{get, web::{self, Data}, HttpResponse, Responder};
 use maud::{html, Markup};
 
 struct TableRow {
@@ -21,17 +21,16 @@ fn format_table_row(row: TableRow) -> Markup {
     })
 }
 
-#[get("/votes")]
-async fn vote_data() -> impl Responder {
+#[get("/votes/{thread_id}")]
+async fn vote_data(_: Data<AppState>, _: web::Path<String>) -> impl Responder {
     HttpResponse::Ok().body(
         html! {
             div."w-full h-full flex flex-col p-4" {
                 h1."text-3xl text-white font-bold pb-2" { "Player Data" }
                 div."text-xl text-white pb-2" { "Enter the data for the players in the game" }
-                form."flex flex-col gap-2" {
-                    label."text-xl" for="game_queue" { "Placeholder" }
+                form."flex flex-col pb-2 mb-2" {
                     (gen_button(ButtonType::FormSubmit(FormSubmitButton {
-                        text: "Save".to_string(),
+                        text: "Scrape Votes".to_string(),
                     })))
                 }
                 table."min-w-full bg-zinc-700 text-white" {
