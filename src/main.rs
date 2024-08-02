@@ -6,6 +6,7 @@ mod components;
 mod models;
 mod routes;
 mod scraping;
+mod utils;
 
 pub struct AppState {
     db: Pool<Postgres>,
