@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use reqwest::Client;
 use select::document::Document;
 use select::predicate::{Attr, Class, Name, Or, Predicate};
