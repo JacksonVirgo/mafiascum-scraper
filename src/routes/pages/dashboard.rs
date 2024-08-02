@@ -52,15 +52,26 @@ async fn dashboard(
     let gen_url = |url: &str| format!("/api/dashboard/{}/{}", url, thread_id);
 
     let get_url_param = |param: &str| format!("/dashboard/{}?d={}", thread_id, param);
+
+    let tabs: Vec<(&str, &str)> = vec![("setup", "1"), ("players", "2"), ("votes", "3")];
     let get_htmx_trigger = |trigger: &str| match query.d {
         Some(ref d) => {
-            if *d == trigger.to_string() {
+            let d_exists = tabs.iter().filter(|(_, tab)| *tab == d).count() > 0;
+            let is_default = !d_exists && trigger == "1";
+            let is_trigger = d == trigger;
+            if is_default || is_trigger {
                 "click, load"
             } else {
                 "click"
             }
         }
-        None => "click",
+        None => {
+            if trigger == "1" {
+                "click, load"
+            } else {
+                "click"
+            }
+        }
     };
 
     let markup = html! {
@@ -68,14 +79,10 @@ async fn dashboard(
         body."bg-zinc-900 w-screen h-screen flex flex-row items-center justify-center text-white" {
             div."bg-zinc-800 border-r border-zinc-600 shrink h-full" {
                 ul."w-64 flex flex-col gap-2 p-4"{
-                    li."cursor-pointer" hx-get=(gen_url("setup")) hx-target="#dashboard-content" hx-trigger=(get_htmx_trigger("1")) hx-push-url=(get_url_param("1")) {
-                        "Setup"
-                    }
-                    li."cursor-pointer" hx-get=(gen_url("players")) hx-target="#dashboard-content" hx-trigger=(get_htmx_trigger("2")) hx-push-url=(get_url_param("2")) {
-                        "Players"
-                    }
-                    li."cursor-pointer" hx-get=(gen_url("votes")) hx-target="#dashboard-content" hx-trigger=(get_htmx_trigger("3")) hx-push-url=(get_url_param("3")) {
-                        "Votes"
+                    @for (tab_name, tab_id) in tabs.iter() {
+                        li."cursor-pointer" hx-get=(gen_url(tab_name)) hx-target="#dashboard-content" hx-trigger=(get_htmx_trigger(tab_id)) hx-push-url=(get_url_param(tab_id)) {
+                            (tab_name.chars().next().map(|c| c.to_uppercase().collect::<String>() + &tab_name[c.len_utf8()..]).unwrap_or(tab_name.to_string()))
+                        }
                     }
                 }
             }

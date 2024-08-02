@@ -4,15 +4,17 @@ use maud::{html, Markup};
 pub struct TextInput {
     pub placeholder: String,
     pub name: String,
-    pub is_required: Option<bool>,
+    pub is_required: bool,
     pub default_value: Option<String>,
+    pub is_hidden: bool,
 }
 
 pub struct TextInputBuilder {
     pub placeholder: String,
     pub name: String,
-    pub is_required: Option<bool>,
+    pub is_required: bool,
     pub default_value: Option<String>,
+    pub is_hidden: bool,
 }
 
 impl TextInputBuilder {
@@ -20,8 +22,9 @@ impl TextInputBuilder {
         TextInputBuilder {
             placeholder: String::new(),
             name: String::new(),
-            is_required: None,
+            is_required: false,
             default_value: None,
+            is_hidden: false,
         }
     }
 
@@ -31,13 +34,27 @@ impl TextInputBuilder {
             name: self.name,
             is_required: self.is_required,
             default_value: self.default_value,
+            is_hidden: self.is_hidden,
         }
     }
 
     pub fn build_html(self) -> Markup {
         let input = self.build();
+
+        let mut style =
+            "w-full px-4 py-2 border border-gray-300 rounded text-white bg-zinc-700".to_string();
+        if input.is_hidden {
+            style.push_str(" hidden");
+        }
+
+        if input.is_required {
+            return html! {
+                input.(style) type="text" name=(input.name) id=(input.name) placeholder=(input.placeholder) required value=(input.default_value.unwrap_or("".to_string())) {}
+            };
+        }
+
         html! {
-            input."w-full px-4 py-2 border border-gray-300 rounded text-white bg-zinc-700" type="text" name=(input.name) id=(input.name) placeholder=(input.placeholder) required=(input.is_required.unwrap_or(false)) value=(input.default_value.unwrap_or("".to_string())) {}
+            input.(style) type="text" name=(input.name) id=(input.name) placeholder=(input.placeholder) value=(input.default_value.unwrap_or("".to_string())) {}
         }
     }
 
@@ -52,7 +69,7 @@ impl TextInputBuilder {
     }
 
     pub fn is_required(mut self, is_required: bool) -> Self {
-        self.is_required = Some(is_required);
+        self.is_required = is_required;
         self
     }
 

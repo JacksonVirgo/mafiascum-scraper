@@ -3,7 +3,7 @@ use maud::{html, Markup};
 pub struct SelectMenuInput {
     pub placeholder: String,
     pub name: String,
-    pub is_required: Option<bool>,
+    pub is_required: bool,
     pub options: Vec<String>,
     pub default_value: Option<String>,
 }
@@ -11,7 +11,7 @@ pub struct SelectMenuInput {
 pub struct SelectMenuBuilder {
     pub placeholder: String,
     pub name: String,
-    pub is_required: Option<bool>,
+    pub is_required: bool,
     pub options: Vec<String>,
     pub default_value: Option<String>,
 }
@@ -21,7 +21,7 @@ impl SelectMenuBuilder {
         SelectMenuBuilder {
             placeholder: String::new(),
             name: String::new(),
-            is_required: None,
+            is_required: false,
             options: Vec::new(),
             default_value: None,
         }
@@ -66,8 +66,22 @@ impl SelectMenuBuilder {
             }
         };
 
+        if input.is_required {
+            return html! {
+                select."w-full px-4 py-2 border border-gray-300 rounded text-white bg-zinc-700" name=(input.name) id=(input.name) required {
+                    option value="" disabled selected {
+                        (input.placeholder)
+                    }
+
+                    @for option in &input.options {
+                        (add_row(option.clone()))
+                    }
+                }
+            };
+        }
+
         html! {
-            select."w-full px-4 py-2 border border-gray-300 rounded text-white bg-zinc-700" name=(input.name) id=(input.name) required=(input.is_required.unwrap_or(false)) {
+            select."w-full px-4 py-2 border border-gray-300 rounded text-white bg-zinc-700" name=(input.name) id=(input.name) {
                 option value="" disabled selected {
                     (input.placeholder)
                 }
@@ -90,7 +104,7 @@ impl SelectMenuBuilder {
     }
 
     pub fn is_required(mut self, is_required: bool) -> Self {
-        self.is_required = Some(is_required);
+        self.is_required = is_required;
         self
     }
 

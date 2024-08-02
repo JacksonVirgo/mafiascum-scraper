@@ -19,18 +19,49 @@ struct FormData {
 }
 
 struct TableRow {
+    id: i32,
     name: String,
     alignment: String,
     role: String,
-    replacements: String,
+    aliases: Vec<String>,
+    replacements: Vec<String>,
 }
-fn format_table_row(row: TableRow) -> Markup {
+
+fn format_table_row(thread_id: &str, row: TableRow) -> Markup {
+    let mut aliases = row.aliases.clone();
+    let mut replacements = row.replacements.clone();
+
+    if aliases.len() == 0 {
+        aliases.push("None".to_string());
+    }
+
+    if replacements.len() == 0 {
+        replacements.push("None".to_string());
+    }
+
     html!({
-        tr."even:bg-zinc-600 hover:cursor-pointer hover:bg-zinc-500" {
+        tr."even:bg-zinc-600 hover:cursor-pointer hover:bg-zinc-500" hx-get=(format!("/api/dashboard/playeredit/{}/{}", thread_id, row.id)) hx-target="#player-wrapper" hx-trigger="click" {
             td."px-4 py-2" { (row.name) }
             td."px-4 py-2 border-l border-gray-200" { (row.alignment) }
             td."px-4 py-2 border-l border-gray-200" { (row.role) }
-            td."px-4 py-2 border-l border-gray-200" { (row.replacements) }
+            td."px-4 py-2 border-l border-gray-200" {
+                ul."list-disc pl-2" {
+                    @for alias in aliases {
+                        li {
+                            (alias)
+                        }
+                    }
+                }
+            }
+            td."px-4 py-2 border-l border-gray-200" {
+                ul."list-disc pl-2" {
+                    @for replacement in replacements {
+                        li {
+                            (replacement)
+                        }
+                    }
+                }
+             }
         }
     })
 }
@@ -59,15 +90,20 @@ async fn player_data(state: Data<AppState>, raw_thread_id: web::Path<String>) ->
     let player_rows: Vec<Markup> = players
         .iter()
         .map(|p| {
-            format_table_row(TableRow {
-                name: p.name.clone(),
-                alignment: match p.alignment.clone() {
-                    Some(a) => a.to_string(),
-                    None => "Not Set".to_string(),
+            format_table_row(
+                &thread_id,
+                TableRow {
+                    id: p.id,
+                    name: p.name.clone(),
+                    alignment: match p.alignment.clone() {
+                        Some(a) => a.to_string(),
+                        None => "Not Set".to_string(),
+                    },
+                    role: p.role.clone().unwrap_or("Not Set".to_string()),
+                    aliases: p.aliases.clone(),
+                    replacements: p.replacements.clone(),
                 },
-                role: p.role.clone().unwrap_or("None".to_string()),
-                replacements: p.role.clone().unwrap_or("None".to_string()),
-            })
+            )
         })
         .collect();
 
@@ -102,6 +138,7 @@ async fn player_data(state: Data<AppState>, raw_thread_id: web::Path<String>) ->
                             th."px-4 py-2 border-gray-200 bg-zinc-800" { "Player Name" }
                             th."px-4 py-2 border-l border-gray-200 bg-zinc-800" { "Alignment" }
                             th."px-4 py-2 border-l border-gray-200 bg-zinc-800" { "Role" }
+                            th."px-4 py-2 border-l border-gray-200 bg-zinc-800" { "Aliases" }
                             th."px-4 py-2 border-l border-gray-200 bg-zinc-800" { "Replacements" }
                         }
                     }

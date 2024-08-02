@@ -11,6 +11,7 @@ pub struct AppState {
     db: Pool<Postgres>,
 }
 
+// TODO: Remove hardcoded static files, add to custom route
 const STYLE_CSS: &[u8] = include_bytes!("./static/output.css");
 const FAVICON: &[u8] = include_bytes!("./static/favicon.ico");
 #[get("/style.css")]
