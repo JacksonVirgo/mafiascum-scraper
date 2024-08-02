@@ -10,6 +10,7 @@ pub fn init(cfg: &mut actix_web::web::ServiceConfig) {
     cfg.service(player_edit::player_edit);
 
     cfg.service(vote_data::vote_data);
+    cfg.service(vote_data::scrape_votes);
 
     cfg.service(setup_data::setup_data);
     cfg.service(setup_data::submit_setup_data);

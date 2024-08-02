@@ -1,5 +1,5 @@
-use crate::{components::buttons::{gen_button, ButtonType, FormSubmitButton}, AppState};
-use actix_web::{get, web::{self, Data}, HttpResponse, Responder};
+use crate::{components::buttons::{gen_button, ButtonType, FormSubmitButton}, scraping::scraper, AppState};
+use actix_web::{get, post, web::{self, Data}, HttpResponse, Responder};
 use maud::{html, Markup};
 
 struct TableRow {
@@ -22,13 +22,14 @@ fn format_table_row(row: TableRow) -> Markup {
 }
 
 #[get("/votes/{thread_id}")]
-async fn vote_data(_: Data<AppState>, _: web::Path<String>) -> impl Responder {
+async fn vote_data(_: Data<AppState>, path: web::Path<String>) -> impl Responder {
+    let thread_id = path.into_inner();
     HttpResponse::Ok().body(
         html! {
-            div."w-full h-full flex flex-col p-4" {
+            div."w-full h-full flex flex-col p-4" id="vote-wrapper" {
                 h1."text-3xl text-white font-bold pb-2" { "Player Data" }
                 div."text-xl text-white pb-2" { "Enter the data for the players in the game" }
-                form."flex flex-col pb-2 mb-2" {
+                form."flex flex-col pb-2 mb-2" hx-post=(format!("/api/dashboard/votes/{}", thread_id)) hx-target="#vote-wrapper" hx-swap="outerHTML" {
                     (gen_button(ButtonType::FormSubmit(FormSubmitButton {
                         text: "Scrape Votes".to_string(),
                     })))
@@ -65,4 +66,25 @@ async fn vote_data(_: Data<AppState>, _: web::Path<String>) -> impl Responder {
         }
         .into_string(),
     )
+}
+
+#[post("/votes/{thread_id}")]
+async fn scrape_votes(_: Data<AppState>, path: web::Path<String>) -> impl Responder {
+    let thread_id = path.into_inner();
+    let full_uri = format!("https://forum.mafiascum.net/viewtopic.php?t={}", thread_id);
+
+    println!("{}", full_uri);
+
+    let page_data = match scraper::get_page_details(full_uri).await {
+        Some(page_data) => page_data,
+        None => {
+            println!("Failed to get page data");
+            return HttpResponse::Found().insert_header(("HX-Redirect", format!("/dashboard/{}?d=2", thread_id))).finish()
+        }
+    };
+
+    println!("{:?}", page_data);
+
+    HttpResponse::Found()
+        .insert_header(("HX-Redirect", format!("/dashboard/{}?d=2", thread_id))).finish()
 }
