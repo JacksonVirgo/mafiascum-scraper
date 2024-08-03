@@ -1,8 +1,9 @@
-use crate::AppState;
 use actix_web::web::Data;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::{self, FromRow};
+
+use crate::utils::app_state::AppState;
 
 #[derive(Debug, Serialize, Deserialize, sqlx::Type)]
 pub enum LogLevel {

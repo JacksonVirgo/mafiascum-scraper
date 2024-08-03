@@ -1,4 +1,3 @@
-use crate::AppState;
 use actix_web::web::Data;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
@@ -6,6 +5,8 @@ use sqlx::FromRow;
 use sqlx::{self, postgres::PgQueryResult};
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter, EnumString};
+
+use crate::utils::app_state::AppState;
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type, EnumString, Display, EnumIter)]
 pub enum PlayerAlignment {

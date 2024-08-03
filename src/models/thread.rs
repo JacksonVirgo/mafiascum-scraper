@@ -1,10 +1,11 @@
-use crate::AppState;
 use actix_web::web::Data;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::{self, FromRow};
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
+
+use crate::utils::app_state::AppState;
 
 #[derive(EnumIter, Display, Debug)]
 pub enum GameQueue {

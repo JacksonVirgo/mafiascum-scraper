@@ -1,4 +1,4 @@
-use crate::AppState;
+use crate::utils::app_state::AppState;
 use actix_web::web::Data;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;

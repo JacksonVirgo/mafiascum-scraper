@@ -4,7 +4,7 @@ use crate::{
         forms::input::text_input::TextInputBuilder,
     },
     models::players::{create_player, get_players},
-    AppState,
+    utils::app_state::AppState,
 };
 use actix_web::{
     get, post,

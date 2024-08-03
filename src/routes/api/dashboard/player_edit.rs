@@ -6,7 +6,7 @@ use crate::{
         forms::input::{select_menu::SelectMenuBuilder, text_input::TextInputBuilder},
     },
     models::players::{get_player, update_player, PlayerAlignment, UpdatePlayer},
-    AppState,
+    utils::app_state::AppState,
 };
 use actix_web::{
     get, post,

@@ -1,14 +1,12 @@
-use crate::models::thread::{get_thread, update_thread, GameQueue};
-use crate::{
-    components::{
-        buttons::{gen_button, ButtonType, FormSubmitButton},
-        forms::input::{
-            number_input::NumberInputBuilder, select_menu::SelectMenuBuilder,
-            text_input::TextInputBuilder,
-        },
+use crate::components::{
+    buttons::{gen_button, ButtonType, FormSubmitButton},
+    forms::input::{
+        number_input::NumberInputBuilder, select_menu::SelectMenuBuilder,
+        text_input::TextInputBuilder,
     },
-    AppState,
 };
+use crate::models::thread::{get_thread, update_thread, GameQueue};
+use crate::utils::app_state::AppState;
 use actix_web::{
     get, post,
     web::{self, Data},

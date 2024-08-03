@@ -1,6 +1,6 @@
 use crate::{
     components::header::{generate_header, Header},
-    AppState,
+    utils::app_state::AppState,
 };
 use actix_web::{get, web, HttpResponse, Responder};
 use maud::html;

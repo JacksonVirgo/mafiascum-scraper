@@ -1,16 +1,8 @@
 use actix_web::{get, web::Data, App, HttpResponse, HttpServer, Responder};
 use dotenv::dotenv;
+use mafiascum_scraper::{routes, utils::app_state::AppState};
 use mime;
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
-mod components;
-mod models;
-mod routes;
-mod scraping;
-mod utils;
-
-pub struct AppState {
-    db: Pool<Postgres>,
-}
+use sqlx::postgres::PgPoolOptions;
 
 // TODO: Remove hardcoded static files, add to custom route
 const STYLE_CSS: &[u8] = include_bytes!("./static/output.css");

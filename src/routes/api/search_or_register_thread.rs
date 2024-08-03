@@ -3,7 +3,7 @@ use crate::scraping::{
     parser::{get_search_params, get_url_from_type, PageType, PostURL, ThreadURL, URLType},
     scraper::get_page_details,
 };
-use crate::AppState;
+use crate::utils::app_state::AppState;
 use actix_web::{
     post,
     web::{self, Data},
