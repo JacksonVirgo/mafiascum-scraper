@@ -37,6 +37,11 @@ impl ForumURL {
         self
     }
 
+    pub fn start(&mut self, start: i32) -> &mut ForumURL {
+        self.start = start;
+        self
+    }
+
     pub fn url(&self, url_type: URLType) -> String {
         match url_type {
             URLType::Thread => format!(

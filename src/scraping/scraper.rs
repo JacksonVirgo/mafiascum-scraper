@@ -1,6 +1,6 @@
 use reqwest::Client;
 use select::document::Document;
-use select::predicate::{Attr, Class, Name, Or, Predicate};
+use select::predicate::{Class, Name};
 
 use crate::scraping::parser::get_search_params;
 
@@ -118,54 +118,71 @@ pub fn scrape_votes(document: &Document) -> Vec<Vote> {
     let mut response: Vec<Vote> = Vec::new();
 
     document.find(Class("post")).for_each(|node| {
-        let votes: Vec<String> = node
-            .find(Or(Class("bbvote"), Name("div").and(Attr("style", ()))))
-            .map(|node| node.text())
-            .filter(|text| text.to_lowercase().starts_with("vote:"))
-            .collect();
-        if votes.len() > 0 {
-            let author: Option<String> =
-                match node.find(Class("username")).collect::<Vec<_>>().first() {
-                    Some(node) => Some(node.text()),
-                    _ => {
-                        match node
-                            .find(Class("username-coloured"))
-                            .collect::<Vec<_>>()
-                            .first()
-                        {
-                            Some(node) => Some(node.text()),
-                            _ => None,
-                        }
-                    }
-                };
+        let content = match node.find(Class("content")).next() {
+            Some(node) => node,
+            None => return,
+        };
 
-            let post_number = match node
-                .find(Class("post-number-bolded"))
-                .collect::<Vec<_>>()
-                .first()
-            {
-                Some(node) => {
-                    let remove_first_char = node.text().chars().skip(1).collect::<String>();
-                    match remove_first_char.parse::<i32>() {
-                        Ok(num) => Some(num),
-                        _ => None,
-                    }
-                }
-                _ => None,
+        let mut last_vote: Option<String> = None;
+        content.children().for_each(|node| {
+            let is_bbvote = match node.attr("class") {
+                Some(class) => class.contains("bbvote"),
+                None => false,
             };
 
-            match (author, post_number) {
-                (Some(author), Some(post_number)) => {
-                    for vote in votes {
-                        response.push(Vote {
-                            author: author.clone(),
-                            target: vote,
-                            post_number,
-                        })
-                    }
-                }
-                _ => (),
+            let is_bolded = match node.attr("style") {
+                Some(style) => style.contains("font-weight:bold"),
+                None => false,
+            };
+
+            if !(is_bbvote || is_bolded) {
+                return;
             }
+
+            let text = node.text();
+            if text.to_lowercase().starts_with("vote:") {
+                let text = text.chars().skip(5).collect::<String>().trim().to_string();
+                last_vote = Some(text);
+            }
+        });
+
+        let author: Option<String> = match node.find(Class("username")).collect::<Vec<_>>().first()
+        {
+            Some(node) => Some(node.text()),
+            _ => {
+                match node
+                    .find(Class("username-coloured"))
+                    .collect::<Vec<_>>()
+                    .first()
+                {
+                    Some(node) => Some(node.text()),
+                    _ => None,
+                }
+            }
+        };
+
+        let post_number = match node
+            .find(Class("post-number-bolded"))
+            .collect::<Vec<_>>()
+            .first()
+        {
+            Some(node) => {
+                let remove_first_char = node.text().chars().skip(1).collect::<String>();
+                match remove_first_char.parse::<i32>() {
+                    Ok(num) => Some(num),
+                    _ => None,
+                }
+            }
+            _ => None,
+        };
+
+        match (last_vote, author, post_number) {
+            (Some(vote), Some(author), Some(post_number)) => response.push(Vote {
+                author: author.clone(),
+                target: vote,
+                post_number,
+            }),
+            _ => (),
         }
     });
 

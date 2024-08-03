@@ -1,4 +1,6 @@
-use crate::{ components::buttons::{gen_button, ButtonType, FormSubmitButton}, models::votes::{create_vote, get_votes, NewVote}, utils::{app_state::AppState, url::ForumURL}};
+use std::thread::current;
+
+use crate::{ components::buttons::{gen_button, ButtonType, FormSubmitButton}, models::votes::{create_vote, get_votes, NewVote}, scraping::scraper::Vote, utils::{app_state::AppState, url::ForumURL}};
 use actix_web::{get, post, web::{self, Data}, HttpResponse, Responder};
 use maud::{html, Markup};
 
@@ -87,34 +89,47 @@ async fn vote_data(state: Data<AppState>, path: web::Path<String>) -> impl Respo
 
 #[post("/votes/{thread_id}")]
 async fn scrape_votes(state: Data<AppState>, path: web::Path<String>) -> impl Responder {
+    // TODO: Make this a polling process, rather than one endpoint that takes a long time
+
     let thread_id = path.into_inner();
-    let url = ForumURL::new(thread_id.clone());
-    let initial_page = match url.scrape().await {
-        Some(page_data) => page_data,
-        None => {
-            println!("Failed to get page data");
-            return HttpResponse::Found().insert_header(("HX-Redirect", format!("/dashboard/{}?d=2", thread_id))).finish()
-        }
-    };
+    let mut url = ForumURL::new(thread_id.clone());
 
-    for vote in initial_page.votes {
-        let vote_copy = vote.clone();
-        let pg = create_vote(&state, NewVote {
-            thread_id: thread_id.clone(),
-            author: vote.author,
-            target: vote.target,
-            target_correction: None,
-            post_number: vote.post_number
-        }).await;
 
-        match pg {
-            Some(_) => println!("Created vote: {:?}", vote_copy),
+    let mut is_last_page = false;
+    let mut current_page = 0;
+    let mut last_page = 1;
+    while current_page < last_page {
+        match url.ppp(200).start(current_page * 200).scrape().await {
+            Some(page) => {
+                for vote in page.votes {
+                    let vote_copy: Vote = vote.clone();
+                    let pg = create_vote(&state, NewVote {
+                        thread_id: thread_id.clone(),
+                        author: vote.author,
+                        target: vote.target,
+                        target_correction: None,
+                        post_number: vote.post_number
+                    }).await;
+        
+                    match pg {
+                        Some(_) => (),
+                        None => {
+                            println!("Failed to create vote: {:?}", vote_copy);
+                        }
+                    }
+                }
+                last_page = page.last_page;
+            },
             None => {
-                println!("Failed to create vote: {:?}", vote_copy);
+                println!("Failed to get page data for page {:?}", current_page);
+                is_last_page = true;
             }
-        }
+        };
+
+        println!("Scraped page {}/{}", current_page, last_page);
+        current_page += 1;
     }
 
     HttpResponse::Found()
-        .insert_header(("HX-Redirect", format!("/dashboard/{}?d=2", thread_id))).finish()
+        .insert_header(("HX-Redirect", format!("/dashboard/{}?d=3", thread_id))).finish()
 }

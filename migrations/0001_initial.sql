@@ -64,3 +64,6 @@ DROP CONSTRAINT IF EXISTS votes_player_id_fkey;
 
 ALTER TABLE votes
 DROP COLUMN IF EXISTS player_id;
+
+ALTER TABLE votes
+ADD CONSTRAINT unique_thread_post UNIQUE (thread_id, post_number);
