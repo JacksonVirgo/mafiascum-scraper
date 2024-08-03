@@ -1,4 +1,4 @@
-use crate::{ components::buttons::{gen_button, ButtonType, FormSubmitButton}, models::votes::get_votes, scraping::scraper, utils::app_state::AppState};
+use crate::{ components::buttons::{gen_button, ButtonType, FormSubmitButton}, models::votes::get_votes, scraping::scraper, utils::{app_state::AppState, url::ForumURL}};
 use actix_web::{get, post, web::{self, Data}, HttpResponse, Responder};
 use maud::{html, Markup};
 
@@ -88,11 +88,9 @@ async fn vote_data(state: Data<AppState>, path: web::Path<String>) -> impl Respo
 #[post("/votes/{thread_id}")]
 async fn scrape_votes(_: Data<AppState>, path: web::Path<String>) -> impl Responder {
     let thread_id = path.into_inner();
-    let full_uri = format!("https://forum.mafiascum.net/viewtopic.php?t={}", thread_id);
 
-    println!("{}", full_uri);
-
-    let page_data = match scraper::get_page_details(full_uri).await {
+    let url = ForumURL::new(thread_id);
+    let page_data = match url.scrape().await {
         Some(page_data) => page_data,
         None => {
             println!("Failed to get page data");

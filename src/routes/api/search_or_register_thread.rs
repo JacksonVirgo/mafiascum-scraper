@@ -4,6 +4,7 @@ use crate::scraping::{
     scraper::get_page_details,
 };
 use crate::utils::app_state::AppState;
+use crate::utils::url::ForumURL;
 use actix_web::{
     post,
     web::{self, Data},
@@ -22,24 +23,11 @@ async fn search_or_register_thread(
     form: web::Form<FormData>,
 ) -> impl Responder {
     let query_search_params = get_search_params(&form.url);
-    let raw_url = match (query_search_params.get("t"), query_search_params.get("p")) {
-        (Some(thread_id), _) => get_url_from_type(
-            URLType::Thread(ThreadURL {
-                thread_id: thread_id.to_string(),
-            }),
-            PageType::Thread,
-        ),
-        (None, Some(post_id)) => get_url_from_type(
-            URLType::Post(PostURL {
-                post_id: post_id.to_string(),
-            }),
-            PageType::Thread,
-        ),
-        _ => None,
-    };
 
-    let url = match raw_url {
-        None => {
+    let url = match (query_search_params.get("t"), query_search_params.get("p")) {
+        (Some(thread_id), _) => ForumURL::new(thread_id.to_string()),
+        (None, Some(post_id)) => ForumURL::new_from_post(post_id.to_string()),
+        _ => {
             return HttpResponse::BadRequest().body(
                 html! {
                     div."text-red-500" { "Invalid URL" }
@@ -47,10 +35,9 @@ async fn search_or_register_thread(
                 .into_string(),
             )
         }
-        Some(url) => url,
     };
 
-    let page_data = match get_page_details(url.clone()).await {
+    let page_data = match url.scrape().await {
         Some(page) => page,
         None => {
             return HttpResponse::BadRequest().body(
