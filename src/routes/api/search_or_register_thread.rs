@@ -1,8 +1,5 @@
 use crate::models::thread::{create_thread, get_thread};
-use crate::scraping::{
-    parser::{get_search_params, get_url_from_type, PageType, PostURL, ThreadURL, URLType},
-    scraper::get_page_details,
-};
+use crate::scraping::parser::get_search_params;
 use crate::utils::app_state::AppState;
 use crate::utils::url::ForumURL;
 use actix_web::{
@@ -24,17 +21,14 @@ async fn search_or_register_thread(
 ) -> impl Responder {
     let query_search_params = get_search_params(&form.url);
 
+    let invalid_url_response = html! { div."text-red-500" { "Invalid URL" } }.into_string();
     let url = match (query_search_params.get("t"), query_search_params.get("p")) {
         (Some(thread_id), _) => ForumURL::new(thread_id.to_string()),
-        (None, Some(post_id)) => ForumURL::new_from_post(post_id.to_string()),
-        _ => {
-            return HttpResponse::BadRequest().body(
-                html! {
-                    div."text-red-500" { "Invalid URL" }
-                }
-                .into_string(),
-            )
-        }
+        (None, Some(post_id)) => match ForumURL::new_from_post(post_id.to_string()).await {
+            Some(url) => url,
+            None => return HttpResponse::BadRequest().body(invalid_url_response),
+        },
+        _ => return HttpResponse::BadRequest().body(invalid_url_response),
     };
 
     let page_data = match url.scrape().await {

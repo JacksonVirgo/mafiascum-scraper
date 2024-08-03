@@ -8,6 +8,7 @@ pub struct ForumURL {
 
 pub enum URLType {
     Thread,
+    Post(String),
 }
 
 impl ForumURL {
@@ -19,16 +20,27 @@ impl ForumURL {
         }
     }
 
-    pub fn new_from_post(post_id: String) -> ForumURL {
-        ForumURL::new("thread_url".to_string())
+    pub async fn new_from_post(post_id: String) -> Option<ForumURL> {
+        match scraper::get_page_details(format!(
+            "https://forum.mafiascum.net/viewtopic.php?&p={}&ppp=1",
+            post_id
+        ))
+        .await
+        {
+            Some(page) => Some(ForumURL::new(page.thread_id)),
+            None => return None,
+        }
     }
 
     pub fn url(&self, url_type: URLType) -> String {
         match url_type {
             URLType::Thread => format!(
-                "https://forum.mafiascum.com/t/{}/?ppp={}&start={}",
+                "https://forum.mafiascum.net/viewtopic.php?t={}&ppp={}&start={}",
                 self.thread_id, self.ppp, self.start
             ),
+            URLType::Post(post_id) => {
+                format!("https://forum.mafiascum.net/viewtopic.php?&p={}", post_id)
+            }
         }
     }
 
