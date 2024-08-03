@@ -97,8 +97,6 @@ async fn scrape_votes(_: Data<AppState>, path: web::Path<String>) -> impl Respon
         }
     };
 
-    println!("{:?}", page_data);
-
     HttpResponse::Found()
         .insert_header(("HX-Redirect", format!("/dashboard/{}?d=2", thread_id))).finish()
 }
