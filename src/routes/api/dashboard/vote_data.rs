@@ -88,8 +88,7 @@ async fn vote_data(state: Data<AppState>, path: web::Path<String>) -> impl Respo
 #[post("/votes/{thread_id}")]
 async fn scrape_votes(_: Data<AppState>, path: web::Path<String>) -> impl Responder {
     let thread_id = path.into_inner();
-
-    let url = ForumURL::new(thread_id);
+    let url = ForumURL::new(thread_id.clone());
     let page_data = match url.scrape().await {
         Some(page_data) => page_data,
         None => {
