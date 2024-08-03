@@ -48,3 +48,15 @@ CREATE TABLE IF NOT EXISTS players (
 
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS replacements TEXT[] NOT NULL DEFAULT '{}';
+
+CREATE TABLE IF NOT EXISTS votes (
+    id SERIAL PRIMARY KEY,
+    author VARCHAR(32) NOT NULL,
+    target VARCHAR(32) NOT NULL,
+    target_correction VARCHAR(32),
+    post_number INT NOT NULL,
+    thread_id VARCHAR(32) NOT NULL,
+    player_id INT NOT NULL,
+    FOREIGN KEY (thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE,
+    FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+)
