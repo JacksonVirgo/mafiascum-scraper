@@ -1,4 +1,4 @@
-use crate::{ components::buttons::{gen_button, ButtonType, FormSubmitButton}, models::votes::get_votes, scraping::scraper, utils::{app_state::AppState, url::ForumURL}};
+use crate::{ components::buttons::{gen_button, ButtonType, FormSubmitButton}, models::votes::get_votes, utils::{app_state::AppState, url::ForumURL}};
 use actix_web::{get, post, web::{self, Data}, HttpResponse, Responder};
 use maud::{html, Markup};
 
