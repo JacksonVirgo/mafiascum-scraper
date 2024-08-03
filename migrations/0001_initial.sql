@@ -44,8 +44,6 @@ CREATE TABLE IF NOT EXISTS players (
     FOREIGN KEY (thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE
 );
 
-# Add a new element to players. replacements TEXT[] NOT NULL DEFAULT '{}
-
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS replacements TEXT[] NOT NULL DEFAULT '{}';
 
@@ -60,3 +58,9 @@ CREATE TABLE IF NOT EXISTS votes (
     FOREIGN KEY (thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE,
     FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
 )
+
+ALTER TABLE votes
+DROP CONSTRAINT IF EXISTS votes_player_id_fkey;
+
+ALTER TABLE votes
+DROP COLUMN IF EXISTS player_id;

@@ -14,7 +14,7 @@ pub struct PageData {
     pub last_page: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Vote {
     pub author: String,
     pub target: String,
@@ -38,6 +38,8 @@ pub async fn get_page_details(url: String) -> Option<PageData> {
     let thread_id = scrape_header(&document);
     let (current_page, last_page) = scrape_pagination(&document);
     let votes = scrape_votes(&document);
+
+    println!("Found {} votes", votes.len());
 
     match (thread_id, current_page, last_page) {
         (Some(thread_id), Some(current_page), Some(last_page)) => Some(PageData {
@@ -113,7 +115,7 @@ pub fn scrape_header(document: &Document) -> Option<String> {
 }
 
 pub fn scrape_votes(document: &Document) -> Vec<Vote> {
-    let votes: Vec<Vote> = Vec::new();
+    let mut response: Vec<Vote> = Vec::new();
 
     document.find(Class("post")).for_each(|node| {
         let votes: Vec<String> = node
@@ -155,7 +157,11 @@ pub fn scrape_votes(document: &Document) -> Vec<Vote> {
             match (author, post_number) {
                 (Some(author), Some(post_number)) => {
                     for vote in votes {
-                        println!("{} voted {} in post {}", author, vote, post_number);
+                        response.push(Vote {
+                            author: author.clone(),
+                            target: vote,
+                            post_number,
+                        })
                     }
                 }
                 _ => (),
@@ -163,5 +169,5 @@ pub fn scrape_votes(document: &Document) -> Vec<Vote> {
         }
     });
 
-    votes
+    response
 }

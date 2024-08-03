@@ -14,7 +14,14 @@ pub struct Vote {
 
     // FKs
     pub thread_id: String,
-    pub player_id: i32,
+}
+
+pub struct NewVote {
+    pub author: String,
+    pub target: String,
+    pub post_number: i32,
+    pub target_correction: Option<String>,
+    pub thread_id: String,
 }
 
 pub enum VoteQuery {
@@ -26,7 +33,7 @@ pub async fn get_vote(state: &Data<AppState>, id: i32) -> Option<Vote> {
     let db = &state.db;
     match sqlx::query_as!(
         Vote,
-        r#"SELECT id, author, target, post_number, target_correction, thread_id, player_id FROM votes WHERE id = $1"#,
+        r#"SELECT id, author, target, post_number, target_correction, thread_id FROM votes WHERE id = $1"#,
         id
     )
     .fetch_one(db)
@@ -37,12 +44,11 @@ pub async fn get_vote(state: &Data<AppState>, id: i32) -> Option<Vote> {
     }
 }
 
-pub async fn get_votes(state: &Data<AppState>, query: VoteQuery) -> Option<Vec<Vote>> {
+pub async fn get_votes(state: &Data<AppState>, thread_id: &str) -> Option<Vec<Vote>> {
     let db = &state.db;
-    match query {
-        VoteQuery::Thread(thread_id) => match sqlx::query_as!(
+    match sqlx::query_as!(
             Vote,
-            r#"SELECT id, author, target, post_number, target_correction, thread_id, player_id FROM votes WHERE thread_id = $1"#,
+            r#"SELECT id, author, target, post_number, target_correction, thread_id FROM votes WHERE thread_id = $1"#,
             thread_id
         )
         .fetch_all(db)
@@ -50,31 +56,18 @@ pub async fn get_votes(state: &Data<AppState>, query: VoteQuery) -> Option<Vec<V
         {
             Ok(votes) => Some(votes),
             _ => None,
-        },
-        VoteQuery::Player(player_id) => match sqlx::query_as!(
-            Vote,
-            r#"SELECT id, author, target, post_number, target_correction, thread_id, player_id FROM votes WHERE player_id = $1"#,
-            player_id
-        )
-        .fetch_all(db)
-        .await
-        {
-            Ok(votes) => Some(votes),
-            _ => None,
-            }
-    }
+        }
 }
 
-pub async fn create_vote(state: &Data<AppState>, vote: Vote) -> Option<PgQueryResult> {
+pub async fn create_vote(state: &Data<AppState>, vote: NewVote) -> Option<PgQueryResult> {
     let db = &state.db;
     match sqlx::query!(
-        "INSERT INTO votes (author, target, post_number, target_correction, thread_id, player_id) VALUES ($1, $2, $3, $4, $5, $6)",
+        "INSERT INTO votes (author, target, post_number, target_correction, thread_id) VALUES ($1, $2, $3, $4, $5)",
         vote.author,
         vote.target,
         vote.post_number,
         vote.target_correction,
         vote.thread_id,
-        vote.player_id
     )
     .execute(db)
     .await

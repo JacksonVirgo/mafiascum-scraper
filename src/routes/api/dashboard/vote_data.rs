@@ -1,4 +1,4 @@
-use crate::{ components::buttons::{gen_button, ButtonType, FormSubmitButton}, models::votes::get_votes, utils::{app_state::AppState, url::ForumURL}};
+use crate::{ components::buttons::{gen_button, ButtonType, FormSubmitButton}, models::votes::{create_vote, get_votes, NewVote}, utils::{app_state::AppState, url::ForumURL}};
 use actix_web::{get, post, web::{self, Data}, HttpResponse, Responder};
 use maud::{html, Markup};
 
@@ -35,7 +35,7 @@ fn format_table_row(row: TableRow) -> Markup {
 async fn vote_data(state: Data<AppState>, path: web::Path<String>) -> impl Responder {
     let thread_id = path.into_inner();
 
-    let all_votes = match get_votes(&state, crate::models::votes::VoteQuery::Thread(thread_id.clone())).await {
+    let all_votes = match get_votes(&state, &thread_id).await {
         Some(votes) => votes,
         None => Vec::new()
     };
@@ -86,16 +86,34 @@ async fn vote_data(state: Data<AppState>, path: web::Path<String>) -> impl Respo
 }
 
 #[post("/votes/{thread_id}")]
-async fn scrape_votes(_: Data<AppState>, path: web::Path<String>) -> impl Responder {
+async fn scrape_votes(state: Data<AppState>, path: web::Path<String>) -> impl Responder {
     let thread_id = path.into_inner();
     let url = ForumURL::new(thread_id.clone());
-    let page_data = match url.scrape().await {
+    let initial_page = match url.scrape().await {
         Some(page_data) => page_data,
         None => {
             println!("Failed to get page data");
             return HttpResponse::Found().insert_header(("HX-Redirect", format!("/dashboard/{}?d=2", thread_id))).finish()
         }
     };
+
+    for vote in initial_page.votes {
+        let vote_copy = vote.clone();
+        let pg = create_vote(&state, NewVote {
+            thread_id: thread_id.clone(),
+            author: vote.author,
+            target: vote.target,
+            target_correction: None,
+            post_number: vote.post_number
+        }).await;
+
+        match pg {
+            Some(_) => println!("Created vote: {:?}", vote_copy),
+            None => {
+                println!("Failed to create vote: {:?}", vote_copy);
+            }
+        }
+    }
 
     HttpResponse::Found()
         .insert_header(("HX-Redirect", format!("/dashboard/{}?d=2", thread_id))).finish()
