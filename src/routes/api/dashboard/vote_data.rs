@@ -94,11 +94,9 @@ async fn scrape_votes(state: Data<AppState>, path: web::Path<String>) -> impl Re
     let thread_id = path.into_inner();
     let mut url = ForumURL::new(thread_id.clone());
 
-
-    let mut is_last_page = false;
     let mut current_page = 0;
     let mut last_page = 1;
-    while current_page < last_page {
+    while current_page <= last_page {
         match url.ppp(200).start(current_page * 200).scrape().await {
             Some(page) => {
                 for vote in page.votes {
@@ -122,7 +120,6 @@ async fn scrape_votes(state: Data<AppState>, path: web::Path<String>) -> impl Re
             },
             None => {
                 println!("Failed to get page data for page {:?}", current_page);
-                is_last_page = true;
             }
         };
 
