@@ -1,29 +1,45 @@
-use crate::{components::buttons::{gen_button, ButtonType, FormSubmitButton}, scraping::scraper, AppState};
+use crate::{components::buttons::{gen_button, ButtonType, FormSubmitButton}, models::votes::get_votes, scraping::scraper, AppState};
 use actix_web::{get, post, web::{self, Data}, HttpResponse, Responder};
 use maud::{html, Markup};
 
 struct TableRow {
     author: String,
     target: String,
-    corrected_target: String,
+    corrected_target: Option<String>,
     post_number: i32,
-    validity: bool
+    validity: Option<bool>
 }
 fn format_table_row(row: TableRow) -> Markup {
     html!({
         tr."even:bg-zinc-600" {
             td."px-4 py-2" { (row.author) }
             td."px-4 py-2 border-l border-gray-200" { (row.target) }
-            td."px-4 py-2 border-l border-gray-200" { (row.corrected_target) }
+            td."px-4 py-2 border-l border-gray-200" { 
+                (match row.corrected_target {
+                    Some(corrected_target) => corrected_target,
+                    None => "N/A".to_string()
+                }) 
+            }
             td."px-4 py-2 border-l border-gray-200" { (row.post_number) }
-            td."px-4 py-2 border-l border-gray-200" { (row.validity) }
+            td."px-4 py-2 border-l border-gray-200" { 
+                (match row.validity {
+                    Some(validity) => if validity { "Yes" } else { "No" }.to_string(),
+                    None => "N/A".to_string()
+                }) 
+            }
         }
     })
 }
 
 #[get("/votes/{thread_id}")]
-async fn vote_data(_: Data<AppState>, path: web::Path<String>) -> impl Responder {
+async fn vote_data(state: Data<AppState>, path: web::Path<String>) -> impl Responder {
     let thread_id = path.into_inner();
+
+    let all_votes = match get_votes(&state, crate::models::votes::VoteQuery::Thread(thread_id.clone())).await {
+        Some(votes) => votes,
+        None => Vec::new()
+    };
+
     HttpResponse::Ok().body(
         html! {
             div."w-full h-full flex flex-col p-4" id="vote-wrapper" {
@@ -46,20 +62,21 @@ async fn vote_data(_: Data<AppState>, path: web::Path<String>) -> impl Responder
                         }
                     }
                     tbody id="player-table-body" {
-                        (format_table_row(TableRow {
-                            author: "Bob Smith".to_string(),
-                            target: "Jaen Doe".to_string(),
-                            corrected_target: "Jane Doe".to_string(),
-                            post_number: 1,
-                            validity: true
-                        }))
-                        (format_table_row(TableRow {
-                            author: "Deadpool".to_string(),
-                            target: "Spiderman".to_string(),
-                            corrected_target: "Spider-Man".to_string(),
-                            post_number: 2,
-                            validity: false
-                        }))
+                        @if all_votes.is_empty() {
+                            tr."even:bg-zinc-600" {
+                                td."px-4 py-2" { "No votes found" }
+                            }
+                        } else {
+                            @for vote in all_votes {
+                                (format_table_row(TableRow {
+                                    author: vote.author,
+                                    target: vote.target,
+                                    corrected_target: vote.target_correction,
+                                    post_number: vote.post_number,
+                                    validity: None
+                                }))
+                            }
+                        }
                     }
                 }
             }
