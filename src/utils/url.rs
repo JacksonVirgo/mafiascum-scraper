@@ -32,6 +32,11 @@ impl ForumURL {
         }
     }
 
+    pub fn ppp(&mut self, ppp: i32) -> &mut ForumURL {
+        self.ppp = ppp;
+        self
+    }
+
     pub fn url(&self, url_type: URLType) -> String {
         match url_type {
             URLType::Thread => format!(

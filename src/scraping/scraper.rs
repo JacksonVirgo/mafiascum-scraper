@@ -10,6 +10,8 @@ pub struct PageData {
     // pub url: String,
     pub thread_id: String,
     pub votes: Vec<Vote>,
+    pub current_page: i32,
+    pub last_page: i32,
 }
 
 #[derive(Debug)]
@@ -33,10 +35,66 @@ pub async fn get_page_details(url: String) -> Option<PageData> {
 
     let document = Document::from(body.as_str());
 
+    let thread_id = scrape_header(&document);
+    let (current_page, last_page) = scrape_pagination(&document);
+    let votes = scrape_votes(&document);
+
+    match (thread_id, current_page, last_page) {
+        (Some(thread_id), Some(current_page), Some(last_page)) => Some(PageData {
+            thread_id,
+            votes,
+            current_page,
+            last_page,
+        }),
+        _ => None,
+    }
+}
+
+pub fn scrape_pagination(document: &Document) -> (Option<i32>, Option<i32>) {
+    let mut current_page: Option<i32> = None;
+    let mut last_page: Option<i32> = None;
+
+    let pagination = match document.find(Class("pagination")).next() {
+        Some(node) => node,
+        None => return (current_page, last_page),
+    };
+
+    let active: i32 = match pagination.find(Class("active")).next() {
+        Some(node) => match node.text().parse::<i32>() {
+            Ok(page) => page,
+            Err(_) => return (current_page, last_page),
+        },
+        None => return (current_page, last_page),
+    };
+
+    let mut largest_page_anchor = 0;
+    pagination.find(Name("li")).for_each(|li| {
+        match li.find(Name("a")).next() {
+            Some(node) => {
+                let text = node.text();
+                match text.trim().parse::<i32>() {
+                    Ok(page) => {
+                        if page > largest_page_anchor {
+                            largest_page_anchor = page;
+                        }
+                        ()
+                    }
+                    Err(_) => (),
+                };
+            }
+            None => return,
+        };
+    });
+
+    // Get largest value between largest_page_anchor and active
+    last_page = Some(largest_page_anchor.max(active));
+    current_page = Some(active);
+    (current_page, last_page)
+}
+
+pub fn scrape_header(document: &Document) -> Option<String> {
     let header = document.find(Name("h2")).next();
-
     let mut thread_id: Option<String> = None;
-
     match header {
         Some(node) => {
             let url = node
@@ -51,7 +109,10 @@ pub async fn get_page_details(url: String) -> Option<PageData> {
         }
         None => (),
     };
+    thread_id
+}
 
+pub fn scrape_votes(document: &Document) -> Vec<Vote> {
     let votes: Vec<Vote> = Vec::new();
 
     document.find(Class("post")).for_each(|node| {
@@ -102,8 +163,5 @@ pub async fn get_page_details(url: String) -> Option<PageData> {
         }
     });
 
-    match thread_id {
-        Some(thread_id) => Some(PageData { thread_id, votes }),
-        _ => None,
-    }
+    votes
 }
