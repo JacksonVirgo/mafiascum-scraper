@@ -1,4 +1,4 @@
-use actix_web::{get, middleware::Logger, web::Data, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, web::Data, App, HttpResponse, HttpServer, Responder};
 use dotenv::dotenv;
 use mafiascum_scraper::{routes, utils::app_state::AppState, utils::logger};
 use mime;
