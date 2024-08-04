@@ -44,12 +44,19 @@ pub async fn get_vote(state: &Data<AppState>, id: i32) -> Option<Vote> {
     }
 }
 
-pub async fn get_votes(state: &Data<AppState>, thread_id: &str) -> Option<Vec<Vote>> {
+pub async fn get_votes(
+    state: &Data<AppState>,
+    thread_id: &str,
+    take: i64,
+    skip: i64,
+) -> Option<Vec<Vote>> {
     let db = &state.db;
     match sqlx::query_as!(
             Vote,
-            r#"SELECT id, author, target, post_number, target_correction, thread_id FROM votes WHERE thread_id = $1"#,
-            thread_id
+            r#"SELECT id, author, target, post_number, target_correction, thread_id FROM votes WHERE thread_id = $1 ORDER BY id DESC LIMIT $2 OFFSET $3"#,
+            thread_id,
+            take,
+            skip
         )
         .fetch_all(db)
         .await
@@ -57,6 +64,20 @@ pub async fn get_votes(state: &Data<AppState>, thread_id: &str) -> Option<Vec<Vo
             Ok(votes) => Some(votes),
             _ => None,
         }
+}
+
+pub async fn get_votes_amt(state: &Data<AppState>, thread_id: &str) -> Option<i64> {
+    let db = &state.db;
+    match sqlx::query!(
+        "SELECT COUNT(*) as amount FROM votes WHERE thread_id = $1",
+        thread_id
+    )
+    .fetch_one(db)
+    .await
+    {
+        Ok(votes) => votes.amount,
+        _ => None,
+    }
 }
 
 pub async fn create_vote(state: &Data<AppState>, vote: NewVote) -> Option<PgQueryResult> {

@@ -50,7 +50,6 @@ async fn dashboard(
     });
 
     let gen_url = |url: &str| format!("/api/dashboard/{}/{}", url, thread_id);
-
     let get_url_param = |param: &str| format!("/dashboard/{}?d={}", thread_id, param);
 
     let tabs: Vec<(&str, &str)> = vec![("setup", "1"), ("players", "2"), ("votes", "3")];

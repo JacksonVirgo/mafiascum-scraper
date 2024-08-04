@@ -1,8 +1,13 @@
-use std::thread::current;
-
-use crate::{ components::buttons::{gen_button, ButtonType, FormSubmitButton}, models::votes::{create_vote, get_votes, NewVote}, scraping::scraper::Vote, utils::{app_state::AppState, url::ForumURL}};
+use crate::{ components::buttons::{gen_button, ButtonType, FormSubmitButton}, models::votes::{create_vote, get_votes, get_votes_amt, NewVote}, scraping::scraper::Vote, utils::{app_state::AppState, url::ForumURL}};
 use actix_web::{get, post, web::{self, Data}, HttpResponse, Responder};
 use maud::{html, Markup};
+use serde::Deserialize;
+
+#[derive(Deserialize, Debug)]
+struct UrlQuery {
+    take: Option<i64>,
+    skip: Option<i64>,
+}
 
 struct TableRow {
     author: String,
@@ -34,13 +39,36 @@ fn format_table_row(row: TableRow) -> Markup {
 }
 
 #[get("/votes/{thread_id}")]
-async fn vote_data(state: Data<AppState>, path: web::Path<String>) -> impl Responder {
+async fn vote_data(state: Data<AppState>, path: web::Path<String>, query: web::Query<UrlQuery>) -> impl Responder {
     let thread_id = path.into_inner();
 
-    let all_votes = match get_votes(&state, &thread_id).await {
+    let take = match query.take {
+        Some(take) => take,
+        None => 10
+    };
+
+    let skip = match query.skip {
+        Some(skip) => skip,
+        None => 0
+    };
+
+    let all_votes = match get_votes(&state, &thread_id, take, skip).await {
         Some(votes) => votes,
         None => Vec::new()
     };
+
+    let vote_count = match get_votes_amt(&state, &thread_id).await {
+        Some(vote_count) => vote_count,
+        None => 0
+    };
+
+    let current_page = (skip / take) + 1;
+    let last_page = (vote_count as f64 / take as f64).ceil() as i64;
+
+    let next_page_url = format!("/api/dashboard/votes/{}?take={}&skip={}", thread_id, take, skip + take);
+    let prev_page_url = format!("/api/dashboard/votes/{}?take={}&skip={}", thread_id, take, skip - take);
+
+    println!("{} {}", next_page_url, prev_page_url);
 
     HttpResponse::Ok().body(
         html! {
@@ -77,6 +105,33 @@ async fn vote_data(state: Data<AppState>, path: web::Path<String>) -> impl Respo
                                     post_number: vote.post_number,
                                     validity: None
                                 }))
+                            }
+                        }
+                    }
+                }
+                div."w-full flex flex-col justify-center items-center" {
+                    div {
+                        span."pagination-page" { 
+                            (format!("Page {} / {}, {} total votes", current_page, last_page, vote_count)) 
+                        }    
+                    }
+                    
+                    div {
+                        @if current_page > 1 {
+                            button."text-lg bg-white border-1 border-zinc-400 rounded py px-2 mt-4 select-none w-fit hover:cursor-pointer hover:bg-zinc-300 text-black" hx-get=(prev_page_url) hx-target="#vote-wrapper" hx-swap="outerHTML" hx-trigger="click" {
+                                "Previous Page"
+                            }
+                        }
+
+                        @if current_page > 1 && current_page < last_page {
+                            span."text-xl px-2 text-white select-none" {
+                                "•"
+                            }
+                        }
+
+                        @if current_page < last_page {
+                            button."text-lg bg-white border-1 border-zinc-400 rounded py px-2 mt-4 select-none w-fit hover:cursor-pointer hover:bg-zinc-300 text-black" hx-get=(next_page_url) hx-target="#vote-wrapper" hx-swap="outerHTML" hx-trigger="click" {
+                                "Next Page"
                             }
                         }
                     }
