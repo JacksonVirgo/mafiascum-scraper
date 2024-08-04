@@ -68,8 +68,6 @@ async fn vote_data(state: Data<AppState>, path: web::Path<String>, query: web::Q
     let next_page_url = format!("/api/dashboard/votes/{}?take={}&skip={}", thread_id, take, skip + take);
     let prev_page_url = format!("/api/dashboard/votes/{}?take={}&skip={}", thread_id, take, skip - take);
 
-    println!("{} {}", next_page_url, prev_page_url);
-
     HttpResponse::Ok().body(
         html! {
             div."w-full h-full flex flex-col p-4" id="vote-wrapper" {
