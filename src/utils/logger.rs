@@ -48,7 +48,8 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let method = req.method().clone();
         let path = req.path().to_string();
-        println!("{} {}", method, path);
+        let query = req.query_string().to_string();
+        println!("{} {}?{}", method, path, query);
 
         let fut = self.service.call(req);
         async move {
