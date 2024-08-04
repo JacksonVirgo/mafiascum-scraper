@@ -49,7 +49,12 @@ where
         let method = req.method().clone();
         let path = req.path().to_string();
         let query = req.query_string().to_string();
-        println!("{} {}?{}", method, path, query);
+
+        if query == "" {
+            println!("{} {}", method, path);
+        } else {
+            println!("{} {}?{}", method, path, query);
+        }
 
         let fut = self.service.call(req);
         async move {
