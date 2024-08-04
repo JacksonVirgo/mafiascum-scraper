@@ -1,6 +1,6 @@
-use actix_web::{get, web::Data, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, middleware::Logger, web::Data, App, HttpResponse, HttpServer, Responder};
 use dotenv::dotenv;
-use mafiascum_scraper::{routes, utils::app_state::AppState};
+use mafiascum_scraper::{routes, utils::app_state::AppState, utils::logger};
 use mime;
 use sqlx::postgres::PgPoolOptions;
 
@@ -41,6 +41,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .wrap(logger::Logger)
             .app_data(Data::new(AppState { db: pool.clone() }))
             .service(serve_css)
             .service(serve_favicon)

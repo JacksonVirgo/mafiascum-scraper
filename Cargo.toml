@@ -17,6 +17,8 @@ reqwest = "0.12.5"
 select = "0.6.0"
 strum = "0.26.3"
 strum_macros = "0.26.4"
+actix-service = "2.0.2"
+futures = "0.3.30"
 
 [dev-dependencies]
 rustfmt = "0.10.0"
