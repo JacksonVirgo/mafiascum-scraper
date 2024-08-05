@@ -14,7 +14,7 @@ pub enum URLType {
 impl ForumURL {
     pub fn new(thread_id: String) -> ForumURL {
         ForumURL {
-            thread_id: thread_id,
+            thread_id,
             ppp: 200,
             start: 0,
         }
