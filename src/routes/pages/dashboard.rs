@@ -1,6 +1,10 @@
 use crate::{
     components::header::{generate_header, Header},
-    utils::app_state::AppState,
+    scraping::parser::ThreadURL,
+    utils::{
+        app_state::AppState,
+        url::{ForumURL, URLType},
+    },
 };
 use actix_web::{get, web, HttpResponse, Responder};
 use maud::html;
@@ -49,6 +53,8 @@ async fn dashboard(
         title: format!("Dashboard - {}", thread_id).as_str(),
     });
 
+    let thread = ForumURL::new(thread_id.clone());
+
     let gen_url = |url: &str| format!("/api/dashboard/{}/{}", url, thread_id);
     let get_url_param = |param: &str| format!("/dashboard/{}?d={}", thread_id, param);
 
@@ -76,8 +82,11 @@ async fn dashboard(
     let markup = html! {
         (header)
         body."bg-zinc-900 w-screen h-screen flex flex-row items-center justify-center text-white" {
-            div."bg-zinc-800 border-r border-zinc-600 shrink h-full" {
-                ul."w-64 flex flex-col gap-2 p-4"{
+            div."bg-zinc-800 border-r border-zinc-600 p-4 shrink h-full flex flex-col gap-2" {
+                h1."text-3xl text-white font-bold pb-2" { "Dashboard" }
+                a."pb-2 underline hover:pointer hover:italic" href=(thread.url(URLType::Thread)) target="_blank" rel="noopener" { "Open Thread URL" }
+                hr;
+                ul."w-64 flex flex-col gap-2"{
                     @for (tab_name, tab_id) in tabs.iter() {
                         li."cursor-pointer" hx-get=(gen_url(tab_name)) hx-target="#dashboard-content" hx-trigger=(get_htmx_trigger(tab_id)) hx-push-url=(get_url_param(tab_id)) {
                             (tab_name.chars().next().map(|c| c.to_uppercase().collect::<String>() + &tab_name[c.len_utf8()..]).unwrap_or(tab_name.to_string()))
